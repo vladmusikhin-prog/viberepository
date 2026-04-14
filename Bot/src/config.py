@@ -15,6 +15,16 @@ load_dotenv()
 logger = logging.getLogger(__name__)
 
 
+def _normalize_signal_source(raw: str) -> str:
+    v = (raw or "polymarket").strip().lower()
+    if v in ("polymarket", "poly", "real", "live"):
+        return "polymarket"
+    if v in ("demo", "mock", "fake"):
+        return "demo"
+    logger.warning("Unknown SIGNAL_SOURCE=%r, using polymarket", raw)
+    return "polymarket"
+
+
 def _resolve_bot_username(token: str, env_username: str) -> str:
     cleaned = env_username.strip().lstrip("@")
     if cleaned:
@@ -38,6 +48,12 @@ class Settings:
     signal_poll_interval_sec: int
     demo_live_min_interval_sec: int
     log_level: str
+    # Polymarket Data API (real signals)
+    signal_source: str  # polymarket | demo
+    polymarket_data_api_base: str
+    polymarket_trades_limit: int
+    polymarket_max_trade_age_sec: int
+    seen_trade_ids_max: int
 
 
 def load_settings() -> Settings:
@@ -55,4 +71,11 @@ def load_settings() -> Settings:
         signal_poll_interval_sec=int(os.getenv("SIGNAL_POLL_INTERVAL_SEC", "30")),
         demo_live_min_interval_sec=int(os.getenv("DEMO_LIVE_MIN_INTERVAL_SEC", "3600")),
         log_level=os.getenv("LOG_LEVEL", "INFO"),
+        signal_source=_normalize_signal_source(os.getenv("SIGNAL_SOURCE", "polymarket")),
+        polymarket_data_api_base=os.getenv(
+            "POLYMARKET_DATA_API_BASE", "https://data-api.polymarket.com"
+        ).rstrip("/"),
+        polymarket_trades_limit=int(os.getenv("POLYMARKET_TRADES_LIMIT", "100")),
+        polymarket_max_trade_age_sec=int(os.getenv("POLYMARKET_MAX_TRADE_AGE_SEC", "600")),
+        seen_trade_ids_max=int(os.getenv("SEEN_TRADE_IDS_MAX", "8000")),
     )

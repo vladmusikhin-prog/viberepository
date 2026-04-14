@@ -2,6 +2,7 @@ import asyncio
 from contextlib import suppress
 import logging
 
+import aiohttp
 from aiogram import Bot, Dispatcher
 from aiogram.types import ErrorEvent
 
@@ -34,21 +35,44 @@ async def main() -> None:
             extra={"update_id": event.update.update_id if event.update else None},
         )
 
-    worker = SignalWorker(
-        bot=bot,
-        context=context,
-        poll_interval_sec=settings.signal_poll_interval_sec,
-        demo_live_min_interval_sec=settings.demo_live_min_interval_sec,
-    )
-    worker_task = asyncio.create_task(worker.run())
+    use_polymarket = settings.signal_source == "polymarket"
 
-    logger.info("Bot started in polling mode")
-    try:
-        await dp.start_polling(bot)
-    finally:
-        worker_task.cancel()
-        with suppress(asyncio.CancelledError):
-            await worker_task
+    async def _run_bot() -> None:
+        if use_polymarket:
+            async with aiohttp.ClientSession() as http_session:
+                worker = SignalWorker(
+                    bot=bot,
+                    context=context,
+                    settings=settings,
+                    http_session=http_session,
+                )
+                worker_task = asyncio.create_task(worker.run())
+                try:
+                    await dp.start_polling(bot)
+                finally:
+                    worker_task.cancel()
+                    with suppress(asyncio.CancelledError):
+                        await worker_task
+        else:
+            worker = SignalWorker(
+                bot=bot,
+                context=context,
+                settings=settings,
+                http_session=None,
+            )
+            worker_task = asyncio.create_task(worker.run())
+            try:
+                await dp.start_polling(bot)
+            finally:
+                worker_task.cancel()
+                with suppress(asyncio.CancelledError):
+                    await worker_task
+
+    logger.info(
+        "Bot started in polling mode (signal_source=%s)",
+        settings.signal_source,
+    )
+    await _run_bot()
 
 
 if __name__ == "__main__":

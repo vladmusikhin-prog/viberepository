@@ -2,11 +2,18 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import time
 from itertools import cycle
+from typing import Optional
 
+import aiohttp
 from aiogram import Bot
 
+from src.config import Settings
 from src.handlers.common import AppContext
+from src.integrations.polymarket_client import fetch_large_cash_trades
+from src.repositories.seen_trades import SeenTradeStore
+from src.services.category_mapper import classify_polymarket_trade
 
 logger = logging.getLogger(__name__)
 
@@ -16,21 +23,97 @@ class SignalWorker:
         self,
         bot: Bot,
         context: AppContext,
-        poll_interval_sec: int,
-        demo_live_min_interval_sec: int,
+        settings: Settings,
+        http_session: Optional[aiohttp.ClientSession],
     ) -> None:
         self.bot = bot
         self.context = context
-        self.poll_interval_sec = poll_interval_sec
-        self.demo_live_min_interval_sec = demo_live_min_interval_sec
+        self.settings = settings
+        self._http = http_session
         self._categories = cycle(["Politics", "Crypto", "Sports"])
+        self._seen_trades = SeenTradeStore(settings.seen_trade_ids_max)
 
     async def run(self) -> None:
         while True:
-            await self._tick()
-            await asyncio.sleep(self.poll_interval_sec)
+            try:
+                if self.settings.signal_source == "demo":
+                    await self._tick_demo()
+                else:
+                    await self._tick_polymarket()
+            except asyncio.CancelledError:
+                raise
+            except Exception:  # noqa: BLE001
+                logger.exception("Signal worker tick failed")
+            await asyncio.sleep(self.settings.signal_poll_interval_sec)
 
-    async def _tick(self) -> None:
+    async def _tick_polymarket(self) -> None:
+        if self._http is None:
+            logger.error("Polymarket mode requires aiohttp session")
+            return
+
+        trades = await fetch_large_cash_trades(
+            self._http,
+            base_url=self.settings.polymarket_data_api_base,
+            min_cash_usd=float(self.settings.whale_threshold_usd),
+            limit=self.settings.polymarket_trades_limit,
+        )
+        if not trades:
+            return
+
+        wall = int(time.time())
+        max_age = self.settings.polymarket_max_trade_age_sec
+
+        for trade in trades:
+            tx = str(trade.get("transactionHash") or "")
+            if not tx:
+                continue
+            ts_raw = trade.get("timestamp")
+            try:
+                ts = int(ts_raw) if ts_raw is not None else 0
+            except (TypeError, ValueError):
+                ts = 0
+            if ts and wall - ts > max_age:
+                continue
+
+            category = classify_polymarket_trade(trade)
+
+            eligible = [
+                u
+                for u in self.context.user_service.user_repo.all_users()
+                if u.is_live_enabled
+                and (not u.categories or category in u.categories)
+            ]
+            if not eligible:
+                continue
+
+            if not self._seen_trades.try_consume(tx):
+                continue
+
+            for user in eligible:
+                signal_id, text, share_url = self.context.signal_service.build_polymarket_trade_alert(
+                    trade,
+                    category,
+                    user.telegram_user_id,
+                )
+                try:
+                    from src.services.keyboards import signal_keyboard
+
+                    await self.bot.send_message(
+                        chat_id=user.telegram_user_id,
+                        text=text,
+                        reply_markup=signal_keyboard(share_url),
+                    )
+                    self.context.signal_service.mark_signal_delivered(
+                        signal_id,
+                        user.telegram_user_id,
+                    )
+                except Exception:  # noqa: BLE001
+                    logger.exception(
+                        "Failed to deliver Polymarket signal",
+                        extra={"user_id": user.telegram_user_id, "tx": tx[:18]},
+                    )
+
+    async def _tick_demo(self) -> None:
         next_category = next(self._categories)
         for user in self.context.user_service.user_repo.all_users():
             if not user.is_live_enabled:
@@ -39,19 +122,13 @@ class SignalWorker:
                 continue
 
             elapsed = self.context.user_service.seconds_since_last_demo_live(user.telegram_user_id)
-            if (
-                elapsed is not None
-                and elapsed < self.demo_live_min_interval_sec
-            ):
+            if elapsed is not None and elapsed < self.settings.demo_live_min_interval_sec:
                 continue
 
             signal_id, text, share_url = self.context.signal_service.build_live_signal_for_user(
                 user,
                 next_category,
             )
-            if not self.context.signal_service.mark_signal_delivered(signal_id, user.telegram_user_id):
-                continue
-
             try:
                 from src.services.keyboards import signal_keyboard
 
@@ -60,6 +137,7 @@ class SignalWorker:
                     text=text,
                     reply_markup=signal_keyboard(share_url),
                 )
-                self.context.user_service.mark_demo_live_sent(user.telegram_user_id)
+                if self.context.signal_service.mark_signal_delivered(signal_id, user.telegram_user_id):
+                    self.context.user_service.mark_demo_live_sent(user.telegram_user_id)
             except Exception:  # noqa: BLE001
-                logger.exception("Failed to deliver live signal", extra={"user_id": user.telegram_user_id})
+                logger.exception("Failed to deliver demo live signal", extra={"user_id": user.telegram_user_id})
