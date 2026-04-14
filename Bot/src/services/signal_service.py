@@ -99,6 +99,9 @@ class SignalService:
         share_url = f"https://t.me/share/url?url=&text={share_payload.replace(' ', '%20').replace(chr(10), '%0A')}"
         return signal_id, text, share_url
 
+    def is_signal_delivered(self, signal_id: str, user_id: int) -> bool:
+        return self.signal_repo.is_delivered(signal_id, user_id)
+
     def mark_signal_delivered(self, signal_id: str, user_id: int) -> bool:
         delivered = self.signal_repo.mark_delivered(signal_id, user_id)
         if delivered:

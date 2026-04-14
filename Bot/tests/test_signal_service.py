@@ -7,8 +7,11 @@ def test_mark_signal_delivered_is_idempotent() -> None:
     signal_repo = SignalRepository()
     service = SignalService(user_repo, signal_repo, 100000, "test_bot")
 
+    assert service.is_signal_delivered("s1", 1) is False
+
     first = service.mark_signal_delivered("s1", 1)
     second = service.mark_signal_delivered("s1", 1)
 
     assert first is True
     assert second is False
+    assert service.is_signal_delivered("s1", 1) is True

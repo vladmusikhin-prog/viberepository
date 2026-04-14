@@ -11,7 +11,6 @@ from aiogram import Bot
 from src.config import Settings
 from src.handlers.common import AppContext
 from src.integrations.polymarket_client import fetch_large_cash_trades
-from src.repositories.seen_trades import SeenTradeStore
 from src.services.category_mapper import classify_polymarket_trade
 
 logger = logging.getLogger(__name__)
@@ -29,7 +28,6 @@ class SignalWorker:
         self.context = context
         self.settings = settings
         self._http = http_session
-        self._seen_trades = SeenTradeStore(settings.seen_trade_ids_max)
 
     async def run(self) -> None:
         while True:
@@ -81,15 +79,17 @@ class SignalWorker:
             if not eligible:
                 continue
 
-            if not self._seen_trades.try_consume(tx):
-                continue
-
             for user in eligible:
                 signal_id, text, share_url = self.context.signal_service.build_polymarket_trade_alert(
                     trade,
                     category,
                     user.telegram_user_id,
                 )
+                if self.context.signal_service.is_signal_delivered(
+                    signal_id,
+                    user.telegram_user_id,
+                ):
+                    continue
                 try:
                     from src.services.keyboards import signal_keyboard
 

@@ -56,5 +56,8 @@ class SignalRepository:
         self._delivery_guard.add(key)
         return True
 
+    def is_delivered(self, signal_id: str, user_id: int) -> bool:
+        return (signal_id, user_id) in self._delivery_guard
+
     def get(self, signal_id: str) -> Optional[Signal]:
         return self._signals.get(signal_id)

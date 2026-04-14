@@ -52,7 +52,6 @@ class Settings:
     polymarket_data_api_base: str
     polymarket_trades_limit: int
     polymarket_max_trade_age_sec: int
-    seen_trade_ids_max: int
 
 
 def load_settings() -> Settings:
@@ -75,5 +74,4 @@ def load_settings() -> Settings:
         ).rstrip("/"),
         polymarket_trades_limit=int(os.getenv("POLYMARKET_TRADES_LIMIT", "100")),
         polymarket_max_trade_age_sec=int(os.getenv("POLYMARKET_MAX_TRADE_AGE_SEC", "600")),
-        seen_trade_ids_max=int(os.getenv("SEEN_TRADE_IDS_MAX", "8000")),
     )

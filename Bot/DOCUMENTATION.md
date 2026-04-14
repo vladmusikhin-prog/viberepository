@@ -1,6 +1,6 @@
 # Документация — Polymarket Signals (Telegram Bot)
 
-**Версия документа:** 0.2.1 (MVP, апрель 2026)  
+**Версия документа:** 0.2.2 (MVP, апрель 2026)  
 **Стек:** Python 3.9+, [aiogram](https://docs.aiogram.dev/) 3.13, polling  
 **Спецификация продукта:** [Docs/TELEGRAM_BOT_MVP_SPEC.md](../Docs/TELEGRAM_BOT_MVP_SPEC.md) (если файл есть в репозитории)
 
@@ -74,7 +74,6 @@ Bot/
 | `POLYMARKET_DATA_API_BASE` | Нет | Базовый URL Data API (по умолчанию официальный) |
 | `POLYMARKET_TRADES_LIMIT` | Нет (`100`) | Сколько последних сделок запрашивать за тик (макс. 500 на стороне клиента) |
 | `POLYMARKET_MAX_TRADE_AGE_SEC` | Нет (`600`) | Не уведомлять о сделках старше N секунд (защита от «прострела» истории после рестарта) |
-| `SEEN_TRADE_IDS_MAX` | Нет (`8000`) | Размер LRU по `transactionHash` для дедупликации |
 | `LOG_LEVEL` | Нет (`INFO`) | Уровень логирования |
 
 Загрузка: `src/config.py` сначала читает `Bot/.env`, затем стандартный `load_dotenv()` (cwd).
@@ -142,7 +141,7 @@ chmod +x run.sh
 
 - Каждые `SIGNAL_POLL_INTERVAL_SEC` запрашиваются крупные сделки с порогом `WHALE_THRESHOLD_USD` (через `filterType=CASH`).
 - Сделки старше `POLYMARKET_MAX_TRADE_AGE_SEC` отбрасываются.
-- Каждый `transactionHash` обрабатывается один раз (хранилище `SeenTradeStore`).
+- Повтор одной и той же сделки одному пользователю блокируется парой `(signal_id, user_id)` в памяти процесса (`SignalRepository._delivery_guard`), в т.ч. при каждом опросе API (раньше кольцевой `SeenTradeStore` мог вытеснить hash и давать ложные повторы).
 - Пользователям с подходящей категорией отправляется сообщение; учёт доставки — `DeliveryLog` / `mark_signal_delivered` **после** успешной отправки.
 
 ### Режим `SIGNAL_SOURCE=demo`
@@ -162,7 +161,7 @@ cd Bot
 
 ## 10. Ограничения и риски
 
-- Нет персистентного хранилища — пользователи, статистика и `SeenTradeStore` не переживают рестарт (после рестарта возможен повтор по свежему ответу API в окне `POLYMARKET_MAX_TRADE_AGE_SEC`).
+- Нет персистентного хранилища — пользователи, статистика и журнал доставок не переживают рестарт (после рестарта возможен повтор по свежему ответу API в окне `POLYMARKET_MAX_TRADE_AGE_SEC`).
 - Категория рынка для фильтра пользователя — **эвристика по строкам**, не официальные теги Gamma; возможны ошибки классификации.
 - Поля Data API могут меняться; при сбоях сети тик логируется и пропускается.
 - Инвайт по `start=invite_<id>` на MVP **без** серверной реферальной логики.
@@ -178,6 +177,7 @@ cd Bot
 | 0.1.1 | Демо live: кулдаун `DEMO_LIVE_MIN_INTERVAL_SEC` на пользователя; шаблон рынка зависит от категории (Politics/Crypto/Sports) |
 | 0.2.0 | Реальные сигналы: Polymarket Data API `/trades` + CASH filter; dedup по `transactionHash`; маппинг категорий; `SIGNAL_SOURCE` |
 | 0.2.1 | Убран таймерный demo-worker; `SIGNAL_SOURCE=demo` = без фоновой рассылки |
+| 0.2.2 | Дедуп Polymarket: только `(pm-<tx>, user_id)` без кольцевого `SeenTradeStore` (исправлены повторы из-за eviction) |
 
 ---
 
