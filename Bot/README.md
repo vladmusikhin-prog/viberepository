@@ -1,22 +1,39 @@
 # Bot
 
-Папка для разработки Telegram-бота.
+MVP Telegram-бот `Polymarket Signals` на `Python + aiogram`.
 
-## Предлагаемая структура
+## Структура
 
-- `src/` — исходный код бота
-- `tests/` — тесты
-- `.env.example` — пример переменных окружения
+- `src/handlers` — Telegram handlers и callback-обработка.
+- `src/services` — бизнес-логика (сигналы, настройки, фидбек).
+- `src/repositories` — in-memory репозитории для MVP.
+- `src/workers` — polling worker для live-сигналов.
+- `tests` — unit-тесты ключевой логики.
 
-## Минимальные шаги запуска (шаблон)
+## Запуск
 
-1. Создайте `.env` на основе `.env.example`.
-2. Установите зависимости выбранного стека (Python/Node.js).
-3. Запустите точку входа из `src/`.
+1. Скопируй `.env.example` в `.env` и задай `BOT_TOKEN`.
+2. `BOT_USERNAME` опционален: если не задан, при старте запрашивается `getMe` у Telegram.
+3. Установи зависимости (из папки `Bot/`):
 
-## TODO
+```bash
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+```
 
-- [ ] Выбрать стек (Python aiogram / Node.js telegraf)
-- [ ] Реализовать команды `/start` и `/help`
-- [ ] Подключить логирование и обработку ошибок
-- [ ] Добавить тесты на обработчики команд
+4. Запусти бота (из папки `Bot/`):
+
+```bash
+.venv/bin/python -m src.main
+```
+
+Или: `./run.sh` (после `chmod +x run.sh`).
+
+## Реализованные MVP-возможности
+
+- `/start` онбординг и выбор категорий (`Politics`, `Crypto`, `Sports`, `All`).
+- `/settings` с управлением категориями и статистикой пользы (`N/M`).
+- Шаблон test/live whale-alert сообщений.
+- Кнопки `Полезно` / `Не полезно`.
+- Кнопка `Поделиться с другом` с deep-link инвайтом.
+- Live-сигналы в polling-режиме (demo worker для MVP).

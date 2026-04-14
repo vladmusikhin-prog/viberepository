@@ -1,0 +1,79 @@
+from __future__ import annotations
+
+from datetime import datetime, timezone
+from uuid import uuid4
+
+from src.models.entities import Signal, User
+from src.repositories.in_memory import SignalRepository, UserRepository
+from src.services.texts import format_alert_text, share_text
+
+
+class SignalService:
+    def __init__(
+        self,
+        user_repo: UserRepository,
+        signal_repo: SignalRepository,
+        whale_threshold_usd: int,
+        bot_username: str,
+    ) -> None:
+        self.user_repo = user_repo
+        self.signal_repo = signal_repo
+        self.whale_threshold_usd = whale_threshold_usd
+        self.bot_username = bot_username
+
+    def build_test_signal(self, user_id: int, category: str) -> tuple[str, str]:
+        signal = Signal(
+            signal_id=f"test-{uuid4()}",
+            market="Will [event] by [date]?",
+            side="BUY YES",
+            size_usd=245000,
+            price=0.61,
+            category=category,
+            timestamp_utc=datetime.now(timezone.utc),
+            is_test=True,
+            delivered_to_user_id=user_id,
+        )
+        self.signal_repo.save(signal)
+        text = format_alert_text(
+            market=signal.market,
+            side=signal.side,
+            size_usd=signal.size_usd,
+            price=signal.price,
+            timestamp_utc=signal.timestamp_utc.strftime("%H:%M"),
+            whale_threshold_usd=self.whale_threshold_usd,
+            category=signal.category,
+        )
+        url_text = share_text(self.bot_username, user_id)
+        return text, f"https://t.me/share/url?url=&text={url_text.replace(' ', '%20').replace(chr(10), '%0A')}"
+
+    def build_live_signal_for_user(self, user: User, category: str) -> tuple[str, str, str]:
+        signal = Signal(
+            signal_id=f"live-{uuid4()}",
+            market="Will BTC reach new ATH this quarter?",
+            side="BUY YES",
+            size_usd=186000,
+            price=0.58,
+            category=category,
+            timestamp_utc=datetime.now(timezone.utc),
+            is_test=False,
+            delivered_to_user_id=user.telegram_user_id,
+        )
+        self.signal_repo.save(signal)
+        text = format_alert_text(
+            market=signal.market,
+            side=signal.side,
+            size_usd=signal.size_usd,
+            price=signal.price,
+            timestamp_utc=signal.timestamp_utc.strftime("%H:%M"),
+            whale_threshold_usd=self.whale_threshold_usd,
+            category=signal.category,
+        )
+        share_payload = share_text(self.bot_username, user.telegram_user_id)
+        share_url = f"https://t.me/share/url?url=&text={share_payload.replace(' ', '%20').replace(chr(10), '%0A')}"
+        return signal.signal_id, text, share_url
+
+    def mark_signal_delivered(self, signal_id: str, user_id: int) -> bool:
+        delivered = self.signal_repo.mark_delivered(signal_id, user_id)
+        if delivered:
+            self.user_repo.increment_signals(user_id)
+        return delivered
