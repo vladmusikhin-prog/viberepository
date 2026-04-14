@@ -31,12 +31,14 @@ class SignalService:
         self.bot_username = bot_username
 
     def build_test_signal(self, user_id: int, category: str) -> tuple[str, str]:
+        # Same shape as live; market/size/price match chosen category (not real API).
+        market, size_usd, price = _demo_market_for_category(category)
         signal = Signal(
             signal_id=f"test-{uuid4()}",
-            market="Will [event] by [date]?",
+            market=market,
             side="BUY YES",
-            size_usd=245000,
-            price=0.61,
+            size_usd=size_usd,
+            price=price,
             category=category,
             timestamp_utc=datetime.now(timezone.utc),
             is_test=True,
