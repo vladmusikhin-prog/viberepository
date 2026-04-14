@@ -46,7 +46,6 @@ class Settings:
     bot_username: str
     whale_threshold_usd: int
     signal_poll_interval_sec: int
-    demo_live_min_interval_sec: int
     log_level: str
     # Polymarket Data API (real signals)
     signal_source: str  # polymarket | demo
@@ -69,7 +68,6 @@ def load_settings() -> Settings:
         bot_username=username,
         whale_threshold_usd=int(os.getenv("WHALE_THRESHOLD_USD", "100000")),
         signal_poll_interval_sec=int(os.getenv("SIGNAL_POLL_INTERVAL_SEC", "30")),
-        demo_live_min_interval_sec=int(os.getenv("DEMO_LIVE_MIN_INTERVAL_SEC", "3600")),
         log_level=os.getenv("LOG_LEVEL", "INFO"),
         signal_source=_normalize_signal_source(os.getenv("SIGNAL_SOURCE", "polymarket")),
         polymarket_data_api_base=os.getenv(

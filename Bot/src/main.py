@@ -38,27 +38,17 @@ async def main() -> None:
     use_polymarket = settings.signal_source == "polymarket"
 
     async def _run_bot() -> None:
-        if use_polymarket:
-            async with aiohttp.ClientSession() as http_session:
-                worker = SignalWorker(
-                    bot=bot,
-                    context=context,
-                    settings=settings,
-                    http_session=http_session,
-                )
-                worker_task = asyncio.create_task(worker.run())
-                try:
-                    await dp.start_polling(bot)
-                finally:
-                    worker_task.cancel()
-                    with suppress(asyncio.CancelledError):
-                        await worker_task
-        else:
+        if not use_polymarket:
+            logger.info("signal_source=%s: background trade worker disabled", settings.signal_source)
+            await dp.start_polling(bot)
+            return
+
+        async with aiohttp.ClientSession() as http_session:
             worker = SignalWorker(
                 bot=bot,
                 context=context,
                 settings=settings,
-                http_session=None,
+                http_session=http_session,
             )
             worker_task = asyncio.create_task(worker.run())
             try:

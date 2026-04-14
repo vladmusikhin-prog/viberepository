@@ -3,7 +3,6 @@ from __future__ import annotations
 import asyncio
 import logging
 import time
-from itertools import cycle
 from typing import Optional
 
 import aiohttp
@@ -30,16 +29,12 @@ class SignalWorker:
         self.context = context
         self.settings = settings
         self._http = http_session
-        self._categories = cycle(["Politics", "Crypto", "Sports"])
         self._seen_trades = SeenTradeStore(settings.seen_trade_ids_max)
 
     async def run(self) -> None:
         while True:
             try:
-                if self.settings.signal_source == "demo":
-                    await self._tick_demo()
-                else:
-                    await self._tick_polymarket()
+                await self._tick_polymarket()
             except asyncio.CancelledError:
                 raise
             except Exception:  # noqa: BLE001
@@ -112,32 +107,3 @@ class SignalWorker:
                         "Failed to deliver Polymarket signal",
                         extra={"user_id": user.telegram_user_id, "tx": tx[:18]},
                     )
-
-    async def _tick_demo(self) -> None:
-        next_category = next(self._categories)
-        for user in self.context.user_service.user_repo.all_users():
-            if not user.is_live_enabled:
-                continue
-            if user.categories and next_category not in user.categories:
-                continue
-
-            elapsed = self.context.user_service.seconds_since_last_demo_live(user.telegram_user_id)
-            if elapsed is not None and elapsed < self.settings.demo_live_min_interval_sec:
-                continue
-
-            signal_id, text, share_url = self.context.signal_service.build_live_signal_for_user(
-                user,
-                next_category,
-            )
-            try:
-                from src.services.keyboards import signal_keyboard
-
-                await self.bot.send_message(
-                    chat_id=user.telegram_user_id,
-                    text=text,
-                    reply_markup=signal_keyboard(share_url),
-                )
-                if self.context.signal_service.mark_signal_delivered(signal_id, user.telegram_user_id):
-                    self.context.user_service.mark_demo_live_sent(user.telegram_user_id)
-            except Exception:  # noqa: BLE001
-                logger.exception("Failed to deliver demo live signal", extra={"user_id": user.telegram_user_id})

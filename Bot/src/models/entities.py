@@ -15,8 +15,6 @@ class User:
     created_at: datetime = field(default_factory=utc_now)
     signals_received: int = 0
     helpful_count: int = 0
-    # throttles demo live pushes from SignalWorker (not persisted across restarts)
-    last_demo_live_sent_at: Optional[datetime] = None
 
 
 @dataclass

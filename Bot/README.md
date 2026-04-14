@@ -2,7 +2,7 @@
 
 MVP Telegram-бот `Polymarket Signals` на `Python + aiogram`.
 
-**Версия:** 0.2.0 · **Полная документация:** [DOCUMENTATION.md](DOCUMENTATION.md)
+**Версия:** 0.2.1 · **Полная документация:** [DOCUMENTATION.md](DOCUMENTATION.md)
 
 ## Структура
 
@@ -35,7 +35,7 @@ python3 -m venv .venv
 
 - `/start` онбординг и выбор категорий (`Politics`, `Crypto`, `Sports`, `All`).
 - `/settings` с управлением категориями и статистикой пользы (`N/M`).
-- Шаблон test/live whale-alert сообщений.
+- Тестовый whale-alert по кнопке онбординга; live — только из Polymarket API.
 - Кнопки `Полезно` / `Не полезно`.
 - Кнопка `Поделиться с другом` с deep-link инвайтом.
-- Live-сигналы в polling-режиме (demo worker для MVP).
+- Live-сигналы из Polymarket Data API (`SIGNAL_SOURCE=polymarket`, по умолчанию).

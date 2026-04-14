@@ -1,11 +1,4 @@
-from datetime import datetime, timezone
-from typing import Optional
-
 from src.repositories.in_memory import UserRepository
-
-
-def _utc_now() -> datetime:
-    return datetime.now(timezone.utc)
 
 
 class UserService:
@@ -23,13 +16,3 @@ class UserService:
         user = self.user_repo.get_or_create(user_id)
         user.is_live_enabled = False
         return user
-
-    def seconds_since_last_demo_live(self, user_id: int) -> Optional[float]:
-        user = self.user_repo.get_or_create(user_id)
-        if user.last_demo_live_sent_at is None:
-            return None
-        return (_utc_now() - user.last_demo_live_sent_at).total_seconds()
-
-    def mark_demo_live_sent(self, user_id: int) -> None:
-        user = self.user_repo.get_or_create(user_id)
-        user.last_demo_live_sent_at = _utc_now()

@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from uuid import uuid4
 
-from src.models.entities import Signal, User
+from src.models.entities import Signal
 from src.repositories.in_memory import SignalRepository, UserRepository
 from src.services.texts import format_alert_text, share_text
 
@@ -56,33 +56,6 @@ class SignalService:
         )
         url_text = share_text(self.bot_username, user_id)
         return text, f"https://t.me/share/url?url=&text={url_text.replace(' ', '%20').replace(chr(10), '%0A')}"
-
-    def build_live_signal_for_user(self, user: User, category: str) -> tuple[str, str, str]:
-        market, size_usd, price = _demo_market_for_category(category)
-        signal = Signal(
-            signal_id=f"live-{uuid4()}",
-            market=market,
-            side="BUY YES",
-            size_usd=size_usd,
-            price=price,
-            category=category,
-            timestamp_utc=datetime.now(timezone.utc),
-            is_test=False,
-            delivered_to_user_id=user.telegram_user_id,
-        )
-        self.signal_repo.save(signal)
-        text = format_alert_text(
-            market=signal.market,
-            side=signal.side,
-            size_usd=signal.size_usd,
-            price=signal.price,
-            timestamp_utc=signal.timestamp_utc.strftime("%H:%M"),
-            whale_threshold_usd=self.whale_threshold_usd,
-            category=signal.category,
-        )
-        share_payload = share_text(self.bot_username, user.telegram_user_id)
-        share_url = f"https://t.me/share/url?url=&text={share_payload.replace(' ', '%20').replace(chr(10), '%0A')}"
-        return signal.signal_id, text, share_url
 
     def build_polymarket_trade_alert(
         self,
