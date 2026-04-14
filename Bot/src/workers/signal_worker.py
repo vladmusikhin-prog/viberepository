@@ -12,10 +12,17 @@ logger = logging.getLogger(__name__)
 
 
 class SignalWorker:
-    def __init__(self, bot: Bot, context: AppContext, poll_interval_sec: int) -> None:
+    def __init__(
+        self,
+        bot: Bot,
+        context: AppContext,
+        poll_interval_sec: int,
+        demo_live_min_interval_sec: int,
+    ) -> None:
         self.bot = bot
         self.context = context
         self.poll_interval_sec = poll_interval_sec
+        self.demo_live_min_interval_sec = demo_live_min_interval_sec
         self._categories = cycle(["Politics", "Crypto", "Sports"])
 
     async def run(self) -> None:
@@ -29,6 +36,13 @@ class SignalWorker:
             if not user.is_live_enabled:
                 continue
             if user.categories and next_category not in user.categories:
+                continue
+
+            elapsed = self.context.user_service.seconds_since_last_demo_live(user.telegram_user_id)
+            if (
+                elapsed is not None
+                and elapsed < self.demo_live_min_interval_sec
+            ):
                 continue
 
             signal_id, text, share_url = self.context.signal_service.build_live_signal_for_user(
@@ -46,5 +60,6 @@ class SignalWorker:
                     text=text,
                     reply_markup=signal_keyboard(share_url),
                 )
+                self.context.user_service.mark_demo_live_sent(user.telegram_user_id)
             except Exception:  # noqa: BLE001
                 logger.exception("Failed to deliver live signal", extra={"user_id": user.telegram_user_id})

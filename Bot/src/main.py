@@ -38,6 +38,7 @@ async def main() -> None:
         bot=bot,
         context=context,
         poll_interval_sec=settings.signal_poll_interval_sec,
+        demo_live_min_interval_sec=settings.demo_live_min_interval_sec,
     )
     worker_task = asyncio.create_task(worker.run())
 

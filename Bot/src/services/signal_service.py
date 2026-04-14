@@ -8,6 +8,15 @@ from src.repositories.in_memory import SignalRepository, UserRepository
 from src.services.texts import format_alert_text, share_text
 
 
+def _demo_market_for_category(category: str) -> tuple[str, float, float]:
+    """Placeholder markets aligned with category (MVP demo only)."""
+    if category == "Crypto":
+        return ("Will BTC reach new ATH this quarter?", 186_000.0, 0.58)
+    if category == "Sports":
+        return ("Will Team A win the championship this season?", 142_000.0, 0.52)
+    return ("Will [political outcome] occur before [date]?", 198_000.0, 0.55)
+
+
 class SignalService:
     def __init__(
         self,
@@ -47,12 +56,13 @@ class SignalService:
         return text, f"https://t.me/share/url?url=&text={url_text.replace(' ', '%20').replace(chr(10), '%0A')}"
 
     def build_live_signal_for_user(self, user: User, category: str) -> tuple[str, str, str]:
+        market, size_usd, price = _demo_market_for_category(category)
         signal = Signal(
             signal_id=f"live-{uuid4()}",
-            market="Will BTC reach new ATH this quarter?",
+            market=market,
             side="BUY YES",
-            size_usd=186000,
-            price=0.58,
+            size_usd=size_usd,
+            price=price,
             category=category,
             timestamp_utc=datetime.now(timezone.utc),
             is_test=False,

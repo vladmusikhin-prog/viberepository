@@ -2,7 +2,7 @@
 
 MVP Telegram-бот `Polymarket Signals` на `Python + aiogram`.
 
-**Версия:** 0.1.0 · **Полная документация:** [DOCUMENTATION.md](DOCUMENTATION.md)
+**Версия:** 0.1.1 · **Полная документация:** [DOCUMENTATION.md](DOCUMENTATION.md)
 
 ## Структура
 
