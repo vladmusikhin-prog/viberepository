@@ -17,6 +17,8 @@ logger = logging.getLogger(__name__)
 
 
 class SignalWorker:
+    MIN_ALERT_PRICE_EXCLUSIVE = 0.0
+
     def __init__(
         self,
         bot: Bot,
@@ -59,6 +61,18 @@ class SignalWorker:
             min_ts = ts if min_ts is None else min(min_ts, ts)
         return int(min_ts or 0)
 
+    def _trade_price(self, trade: dict) -> float:
+        try:
+            return float(trade.get("price") or 0.0)
+        except (TypeError, ValueError):
+            return 0.0
+
+    def _is_alertable_price(self, price: float) -> bool:
+        return (
+            price > self.MIN_ALERT_PRICE_EXCLUSIVE
+            and price <= self.settings.alert_max_price
+        )
+
     async def _backfill_polymarket_once(self) -> None:
         if self._http is None:
             return
@@ -100,6 +114,10 @@ class SignalWorker:
 
                 ts = self._trade_timestamp_utc(trade)
                 if not ts or ts < cut_ts:
+                    continue
+
+                price = self._trade_price(trade)
+                if not self._is_alertable_price(price):
                     continue
                 considered_trades_total += 1
 
@@ -188,6 +206,10 @@ class SignalWorker:
             except (TypeError, ValueError):
                 ts = 0
             if ts and wall - ts > max_age:
+                continue
+
+            price = self._trade_price(trade)
+            if not self._is_alertable_price(price):
                 continue
 
             category = classify_polymarket_trade(trade)

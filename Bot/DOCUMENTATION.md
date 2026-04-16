@@ -69,6 +69,7 @@ Bot/
 | `BOT_TOKEN` | Да | Токен от [@BotFather](https://t.me/BotFather) |
 | `BOT_USERNAME` | Нет | Username бота без `@`. Если пусто — подставляется из Telegram `getMe` при загрузке конфига |
 | `WHALE_THRESHOLD_USD` | Нет (по умолчанию `100000`) | Порог для текста «Критерий whale» в шаблоне |
+| `ALERT_MAX_PRICE` | Нет (`0.95`) | Верхняя граница цены для алертов (`0.00` и выше порога игнорируются) |
 | `SIGNAL_POLL_INTERVAL_SEC` | Нет (по умолчанию `30`) | Интервал опроса Polymarket Data API (только при `SIGNAL_SOURCE=polymarket`) |
 | `SIGNAL_SOURCE` | Нет (`polymarket`) | `polymarket` — фоновый опрос `/trades`; `demo` — без фонового worker, только ручной тест в чате |
 | `POLYMARKET_DATA_API_BASE` | Нет | Базовый URL Data API (по умолчанию официальный) |
