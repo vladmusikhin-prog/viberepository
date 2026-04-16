@@ -79,7 +79,7 @@ class SignalWorker:
             trades = await fetch_large_cash_trades(
                 self._http,
                 base_url=self.settings.polymarket_data_api_base,
-                min_cash_usd=float(self.settings.whale_threshold_usd),
+                min_cash_usd=int(self.settings.whale_threshold_usd),
                 limit=limit,
                 offset=offset,
             )
@@ -155,7 +155,7 @@ class SignalWorker:
         trades = await fetch_large_cash_trades(
             self._http,
             base_url=self.settings.polymarket_data_api_base,
-            min_cash_usd=float(self.settings.whale_threshold_usd),
+            min_cash_usd=int(self.settings.whale_threshold_usd),
             limit=self.settings.polymarket_trades_limit,
         )
         if not trades:

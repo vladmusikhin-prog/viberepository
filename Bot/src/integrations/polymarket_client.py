@@ -24,7 +24,8 @@ async def fetch_large_cash_trades(
     params = {
         "limit": min(max(limit, 1), 500),
         "filterType": "CASH",
-        "filterAmount": min_cash_usd,
+        # Data API accepts integer amounts; passing float can lead to server-side timeouts.
+        "filterAmount": int(min_cash_usd),
         "offset": max(int(offset), 0),
     }
     timeout = aiohttp.ClientTimeout(total=45)
