@@ -21,10 +21,7 @@ async def main() -> None:
     bot = Bot(token=settings.bot_token)
     dp = Dispatcher()
 
-    context = build_context(
-        whale_threshold_usd=settings.whale_threshold_usd,
-        bot_username=settings.bot_username,
-    )
+    context = build_context(settings=settings)
     dp.include_router(register_handlers(context))
 
     @dp.errors()

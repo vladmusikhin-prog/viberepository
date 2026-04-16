@@ -26,6 +26,11 @@ class UserRepository:
         user.is_live_enabled = True
         return user
 
+    def set_live_enabled(self, telegram_user_id: int, enabled: bool) -> User:
+        user = self.get_or_create(telegram_user_id)
+        user.is_live_enabled = enabled
+        return user
+
     def increment_signals(self, telegram_user_id: int) -> None:
         user = self.get_or_create(telegram_user_id)
         user.signals_received += 1
@@ -58,6 +63,12 @@ class SignalRepository:
 
     def is_delivered(self, signal_id: str, user_id: int) -> bool:
         return (signal_id, user_id) in self._delivery_guard
+
+    def delivered_count(self) -> int:
+        return len(self._delivery_guard)
+
+    def signal_count(self) -> int:
+        return len(self._signals)
 
     def get(self, signal_id: str) -> Optional[Signal]:
         return self._signals.get(signal_id)

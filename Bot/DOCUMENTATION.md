@@ -1,6 +1,6 @@
 # Документация — Polymarket Signals (Telegram Bot)
 
-**Версия документа:** 0.2.2 (MVP, апрель 2026)  
+**Версия документа:** 0.2.4 (MVP, апрель 2026)  
 **Стек:** Python 3.9+, [aiogram](https://docs.aiogram.dev/) 3.13, polling  
 **Спецификация продукта:** [Docs/TELEGRAM_BOT_MVP_SPEC.md](../Docs/TELEGRAM_BOT_MVP_SPEC.md) (если файл есть в репозитории)
 
@@ -74,6 +74,9 @@ Bot/
 | `POLYMARKET_DATA_API_BASE` | Нет | Базовый URL Data API (по умолчанию официальный) |
 | `POLYMARKET_TRADES_LIMIT` | Нет (`100`) | Сколько последних сделок запрашивать за тик (макс. 500 на стороне клиента) |
 | `POLYMARKET_MAX_TRADE_AGE_SEC` | Нет (`600`) | Не уведомлять о сделках старше N секунд (защита от «прострела» истории после рестарта) |
+| `ADMIN_USER_IDS` | Нет (пусто) | Список Telegram user id через запятую для доступа к `/admin_stats` (если пусто — команда доступна всем в локальном MVP) |
+| `PERSISTENCE_MODE` | Нет (`sqlite`) | `sqlite` — подписки и дедуп переживают рестарт; `memory` — состояние сбрасывается |
+| `SQLITE_DB_PATH` | Нет | Путь к SQLite базе (например `./data/bot.sqlite3`) |
 | `LOG_LEVEL` | Нет (`INFO`) | Уровень логирования |
 
 Загрузка: `src/config.py` сначала читает `Bot/.env`, затем стандартный `load_dotenv()` (cwd).
@@ -109,6 +112,7 @@ chmod +x run.sh
 - `/start` — приветствие и клавиатура «Активировать» / «Как это работает»
 - `/help` — краткая подсказка
 - `/settings` — категории, статус live, блок «Твоя статистика», кнопки изменения категорий и выключения сигналов
+- `/admin_stats` — сводка метрик процесса (доступ только для `ADMIN_USER_IDS`)
 
 ### Callback-данные (основные)
 
@@ -178,6 +182,8 @@ cd Bot
 | 0.2.0 | Реальные сигналы: Polymarket Data API `/trades` + CASH filter; dedup по `transactionHash`; маппинг категорий; `SIGNAL_SOURCE` |
 | 0.2.1 | Убран таймерный demo-worker; `SIGNAL_SOURCE=demo` = без фоновой рассылки |
 | 0.2.2 | Дедуп Polymarket: только `(pm-<tx>, user_id)` без кольцевого `SeenTradeStore` (исправлены повторы из-за eviction) |
+| 0.2.3 | Добавлена админ-команда `/admin_stats` с доступом по `ADMIN_USER_IDS` |
+| 0.2.4 | Добавлена персистентность подписок и delivery-dedup через SQLite (24/7 при всегда запущенном процессе) |
 
 ---
 

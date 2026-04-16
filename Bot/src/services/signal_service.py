@@ -4,7 +4,6 @@ from datetime import datetime, timezone
 from uuid import uuid4
 
 from src.models.entities import Signal
-from src.repositories.in_memory import SignalRepository, UserRepository
 from src.services.texts import format_alert_text, share_text
 
 
@@ -20,8 +19,8 @@ def _demo_market_for_category(category: str) -> tuple[str, float, float]:
 class SignalService:
     def __init__(
         self,
-        user_repo: UserRepository,
-        signal_repo: SignalRepository,
+        user_repo,
+        signal_repo,
         whale_threshold_usd: int,
         bot_username: str,
     ) -> None:

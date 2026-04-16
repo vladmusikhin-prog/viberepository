@@ -45,6 +45,17 @@ def register_handlers(context: AppContext) -> Router:
         text = context.settings_service.render_settings(message.from_user.id)
         await message.answer(text, reply_markup=settings_keyboard())
 
+    @router.message(Command("admin_stats"))
+    async def cmd_admin_stats(message: Message) -> None:
+        if not message.from_user:
+            return
+        user_id = message.from_user.id
+        logger.info("Admin stats requested by user_id=%s", user_id)
+        if not context.admin_service.is_admin(user_id):
+            await message.answer("Команда недоступна.")
+            return
+        await message.answer(context.admin_service.render_stats())
+
     @router.callback_query(F.data == "activate")
     async def cb_activate(callback: CallbackQuery) -> None:
         await callback.answer()

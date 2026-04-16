@@ -25,6 +25,19 @@ def _normalize_signal_source(raw: str) -> str:
     return "polymarket"
 
 
+def _parse_admin_user_ids(raw: str) -> tuple[int, ...]:
+    values: list[int] = []
+    for part in (raw or "").split(","):
+        p = part.strip()
+        if not p:
+            continue
+        try:
+            values.append(int(p))
+        except ValueError:
+            logger.warning("Invalid ADMIN_USER_IDS value ignored: %r", p)
+    return tuple(sorted(set(values)))
+
+
 def _resolve_bot_username(token: str, env_username: str) -> str:
     cleaned = env_username.strip().lstrip("@")
     if cleaned:
@@ -52,6 +65,9 @@ class Settings:
     polymarket_data_api_base: str
     polymarket_trades_limit: int
     polymarket_max_trade_age_sec: int
+    admin_user_ids: tuple[int, ...]
+    persistence_mode: str  # memory | sqlite
+    sqlite_db_path: str
 
 
 def load_settings() -> Settings:
@@ -74,4 +90,11 @@ def load_settings() -> Settings:
         ).rstrip("/"),
         polymarket_trades_limit=int(os.getenv("POLYMARKET_TRADES_LIMIT", "100")),
         polymarket_max_trade_age_sec=int(os.getenv("POLYMARKET_MAX_TRADE_AGE_SEC", "600")),
+        admin_user_ids=_parse_admin_user_ids(os.getenv("ADMIN_USER_IDS", "")),
+        persistence_mode=os.getenv("PERSISTENCE_MODE", "sqlite").strip().lower(),
+        sqlite_db_path=os.getenv(
+            "SQLITE_DB_PATH",
+            # relative to Bot/ directory by default
+            str(Path(__file__).resolve().parent.parent / "data" / "bot.sqlite3"),
+        ),
     )

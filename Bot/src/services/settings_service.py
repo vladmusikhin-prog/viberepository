@@ -1,8 +1,5 @@
-from src.repositories.in_memory import UserRepository
-
-
 class SettingsService:
-    def __init__(self, user_repo: UserRepository) -> None:
+    def __init__(self, user_repo) -> None:
         self.user_repo = user_repo
 
     def render_settings(self, user_id: int) -> str:
