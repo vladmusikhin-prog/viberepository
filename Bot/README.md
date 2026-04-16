@@ -2,7 +2,7 @@
 
 MVP Telegram-бот `Polymarket Signals` на `Python + aiogram`.
 
-**Версия:** 0.2.4 · **Полная документация:** [DOCUMENTATION.md](DOCUMENTATION.md)
+**Версия:** 0.2.5 · **Полная документация:** [DOCUMENTATION.md](DOCUMENTATION.md)
 
 ## Структура
 
@@ -40,6 +40,10 @@ python3 -m venv .venv
 - Кнопки `Полезно` / `Не полезно`.
 - Кнопка `Поделиться с другом` с deep-link инвайтом.
 - Live-сигналы из Polymarket Data API (`SIGNAL_SOURCE=polymarket`, по умолчанию).
+
+### Backfill при старте
+
+При старте бота выполняется разовый backfill на основе `POLYMARKET_BACKFILL_*`, чтобы догнать события после простоя (в пределах `POLYMARKET_BACKFILL_AGE_SEC`).
 
 ### 24/7 режим
 

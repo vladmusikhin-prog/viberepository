@@ -65,6 +65,11 @@ class Settings:
     polymarket_data_api_base: str
     polymarket_trades_limit: int
     polymarket_max_trade_age_sec: int
+    # Startup backfill (catch-up missed trades after downtime)
+    polymarket_backfill_enabled: bool
+    polymarket_backfill_age_sec: int
+    polymarket_backfill_limit: int
+    polymarket_backfill_max_pages: int
     admin_user_ids: tuple[int, ...]
     persistence_mode: str  # memory | sqlite
     sqlite_db_path: str
@@ -90,6 +95,10 @@ def load_settings() -> Settings:
         ).rstrip("/"),
         polymarket_trades_limit=int(os.getenv("POLYMARKET_TRADES_LIMIT", "100")),
         polymarket_max_trade_age_sec=int(os.getenv("POLYMARKET_MAX_TRADE_AGE_SEC", "600")),
+        polymarket_backfill_enabled=(os.getenv("POLYMARKET_BACKFILL_ENABLED", "true").strip().lower() in ("1", "true", "yes", "y", "on")),
+        polymarket_backfill_age_sec=int(os.getenv("POLYMARKET_BACKFILL_AGE_SEC", str(24 * 3600))),
+        polymarket_backfill_limit=int(os.getenv("POLYMARKET_BACKFILL_LIMIT", "500")),
+        polymarket_backfill_max_pages=int(os.getenv("POLYMARKET_BACKFILL_MAX_PAGES", "5")),
         admin_user_ids=_parse_admin_user_ids(os.getenv("ADMIN_USER_IDS", "")),
         persistence_mode=os.getenv("PERSISTENCE_MODE", "sqlite").strip().lower(),
         sqlite_db_path=os.getenv(

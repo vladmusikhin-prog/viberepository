@@ -14,6 +14,7 @@ async def fetch_large_cash_trades(
     base_url: str,
     min_cash_usd: float,
     limit: int,
+    offset: int = 0,
 ) -> List[dict[str, Any]]:
     """
     GET /trades with CASH filter — Polymarket Data API.
@@ -24,6 +25,7 @@ async def fetch_large_cash_trades(
         "limit": min(max(limit, 1), 500),
         "filterType": "CASH",
         "filterAmount": min_cash_usd,
+        "offset": max(int(offset), 0),
     }
     timeout = aiohttp.ClientTimeout(total=45)
     try:
