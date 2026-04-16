@@ -86,8 +86,8 @@ def register_handlers(context: AppContext) -> Router:
         await callback.answer()
         user = context.user_service.ensure_user(callback.from_user.id)
         category = user.categories[0] if user.categories else "Politics"
-        text, share_url = context.signal_service.build_test_signal(callback.from_user.id, category)
-        await callback.message.answer(text, reply_markup=signal_keyboard(share_url))
+        text, _invite_url = context.signal_service.build_test_signal(callback.from_user.id, category)
+        await callback.message.answer(text, reply_markup=signal_keyboard())
 
     @router.callback_query(F.data == "go_live")
     async def cb_go_live(callback: CallbackQuery) -> None:
@@ -101,6 +101,20 @@ def register_handlers(context: AppContext) -> Router:
         await callback.answer("Спасибо за фидбек")
         reaction = callback.data.split(":", maxsplit=1)[1]
         context.feedback_service.record_feedback(callback.from_user.id, reaction)
+
+    @router.callback_query(F.data == "share_friend")
+    async def cb_share_friend(callback: CallbackQuery) -> None:
+        if not callback.from_user:
+            return
+        await callback.answer()
+        user_id = callback.from_user.id
+        invite_url = context.signal_service.build_invite_link(user_id)
+        share_msg = context.signal_service.build_share_text(user_id)
+        await callback.message.answer(
+            "Скопируй и отправь другу:\n\n"
+            f"{share_msg}\n\n"
+            f"Ссылка: {invite_url}"
+        )
 
     @router.callback_query(F.data == "disable_live")
     async def cb_disable_live(callback: CallbackQuery) -> None:

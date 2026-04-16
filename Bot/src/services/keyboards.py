@@ -45,14 +45,14 @@ def preview_keyboard() -> InlineKeyboardMarkup:
     )
 
 
-def signal_keyboard(share_url: str) -> InlineKeyboardMarkup:
+def signal_keyboard() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
                 InlineKeyboardButton(text="Полезно", callback_data="feedback:helpful"),
                 InlineKeyboardButton(text="Не полезно", callback_data="feedback:not_helpful"),
             ],
-            [InlineKeyboardButton(text="Поделиться с другом", url=share_url)],
+            [InlineKeyboardButton(text="Поделиться с другом", callback_data="share_friend")],
         ]
     )
 

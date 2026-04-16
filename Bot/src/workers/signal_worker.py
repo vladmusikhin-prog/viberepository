@@ -133,7 +133,7 @@ class SignalWorker:
                     continue
 
                 for user in eligible:
-                    signal_id, text, share_url = self.context.signal_service.build_polymarket_trade_alert(
+                    signal_id, text, _invite_url = self.context.signal_service.build_polymarket_trade_alert(
                         trade,
                         category,
                         user.telegram_user_id,
@@ -150,7 +150,7 @@ class SignalWorker:
                         await self.bot.send_message(
                             chat_id=user.telegram_user_id,
                             text=text,
-                            reply_markup=signal_keyboard(share_url),
+                            reply_markup=signal_keyboard(),
                         )
                         delivered = self.context.signal_service.mark_signal_delivered(
                             signal_id,
@@ -224,7 +224,7 @@ class SignalWorker:
                 continue
 
             for user in eligible:
-                signal_id, text, share_url = self.context.signal_service.build_polymarket_trade_alert(
+                signal_id, text, _invite_url = self.context.signal_service.build_polymarket_trade_alert(
                     trade,
                     category,
                     user.telegram_user_id,
@@ -240,7 +240,7 @@ class SignalWorker:
                     await self.bot.send_message(
                         chat_id=user.telegram_user_id,
                         text=text,
-                        reply_markup=signal_keyboard(share_url),
+                        reply_markup=signal_keyboard(),
                     )
                     self.context.signal_service.mark_signal_delivered(
                         signal_id,

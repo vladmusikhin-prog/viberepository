@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from urllib.parse import urlencode
 from uuid import uuid4
 
 from src.models.entities import Signal
@@ -15,14 +14,6 @@ def _demo_market_for_category(category: str) -> tuple[str, float, float]:
     if category == "Sports":
         return ("Will Team A win the championship this season?", 142_000.0, 0.52)
     return ("Will [political outcome] occur before [date]?", 198_000.0, 0.55)
-
-
-def _share_url(bot_username: str, inviter_user_id: int) -> str:
-    invite_url = f"https://t.me/{bot_username}?start=invite_{inviter_user_id}"
-    text = share_text(bot_username, inviter_user_id)
-    # Keep non-empty `url` to work reliably across Telegram clients.
-    query = urlencode({"url": invite_url, "text": text})
-    return f"https://t.me/share/url?{query}"
 
 
 class SignalService:
@@ -62,7 +53,7 @@ class SignalService:
             whale_threshold_usd=self.whale_threshold_usd,
             category=signal.category,
         )
-        return text, _share_url(self.bot_username, user_id)
+        return text, self.build_invite_link(user_id)
 
     def build_polymarket_trade_alert(
         self,
@@ -102,7 +93,13 @@ class SignalService:
             whale_threshold_usd=self.whale_threshold_usd,
             category=product_category,
         )
-        return signal_id, text, _share_url(self.bot_username, inviter_telegram_user_id)
+        return signal_id, text, self.build_invite_link(inviter_telegram_user_id)
+
+    def build_invite_link(self, inviter_user_id: int) -> str:
+        return f"https://t.me/{self.bot_username}?start=invite_{inviter_user_id}"
+
+    def build_share_text(self, inviter_user_id: int) -> str:
+        return share_text(self.bot_username, inviter_user_id)
 
     def is_signal_delivered(self, signal_id: str, user_id: int) -> bool:
         return self.signal_repo.is_delivered(signal_id, user_id)
