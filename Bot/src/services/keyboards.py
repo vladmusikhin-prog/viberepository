@@ -1,6 +1,10 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 
+def _main_menu_button() -> InlineKeyboardButton:
+    return InlineKeyboardButton(text="🏠 Главное меню", callback_data="main_menu")
+
+
 def start_keyboard() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
@@ -23,6 +27,7 @@ def categories_keyboard() -> InlineKeyboardMarkup:
                 InlineKeyboardButton(text="🏅 Sports", callback_data="category:Sports"),
                 InlineKeyboardButton(text="🌐 All", callback_data="category:All"),
             ],
+            [_main_menu_button()],
         ]
     )
 
@@ -32,6 +37,7 @@ def activation_success_keyboard() -> InlineKeyboardMarkup:
         inline_keyboard=[
             [InlineKeyboardButton(text="🧪 Получить тестовый сигнал", callback_data="test_signal")],
             [InlineKeyboardButton(text="⚙️ Изменить категории", callback_data="activate")],
+            [_main_menu_button()],
         ]
     )
 
@@ -41,6 +47,7 @@ def preview_keyboard() -> InlineKeyboardMarkup:
         inline_keyboard=[
             [InlineKeyboardButton(text="👀 Открыть тестовый сигнал", callback_data="open_test_signal")],
             [InlineKeyboardButton(text="🔔 Получить live-сигналы", callback_data="go_live")],
+            [_main_menu_button()],
         ]
     )
 
@@ -53,6 +60,7 @@ def signal_keyboard() -> InlineKeyboardMarkup:
                 InlineKeyboardButton(text="👎 Не полезно", callback_data="feedback:not_helpful"),
             ],
             [InlineKeyboardButton(text="📨 Поделиться с другом", callback_data="share_friend")],
+            [_main_menu_button()],
         ]
     )
 
@@ -62,5 +70,6 @@ def settings_keyboard() -> InlineKeyboardMarkup:
         inline_keyboard=[
             [InlineKeyboardButton(text="⚙️ Изменить категории", callback_data="activate")],
             [InlineKeyboardButton(text="🔕 Выключить сигналы", callback_data="disable_live")],
+            [_main_menu_button()],
         ]
     )

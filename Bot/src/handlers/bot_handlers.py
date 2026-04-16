@@ -139,4 +139,12 @@ def register_handlers(context: AppContext) -> Router:
         text = context.settings_service.render_settings(callback.from_user.id)
         await callback.message.answer(text, reply_markup=settings_keyboard())
 
+    @router.callback_query(F.data == "main_menu")
+    async def cb_main_menu(callback: CallbackQuery) -> None:
+        if not callback.from_user:
+            return
+        await callback.answer()
+        context.user_service.ensure_user(callback.from_user.id)
+        await callback.message.answer(START_TEXT, reply_markup=start_keyboard())
+
     return router
