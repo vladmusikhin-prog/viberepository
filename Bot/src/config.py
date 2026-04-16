@@ -97,8 +97,8 @@ def load_settings() -> Settings:
         polymarket_max_trade_age_sec=int(os.getenv("POLYMARKET_MAX_TRADE_AGE_SEC", "600")),
         polymarket_backfill_enabled=(os.getenv("POLYMARKET_BACKFILL_ENABLED", "true").strip().lower() in ("1", "true", "yes", "y", "on")),
         polymarket_backfill_age_sec=int(os.getenv("POLYMARKET_BACKFILL_AGE_SEC", str(24 * 3600))),
-        polymarket_backfill_limit=int(os.getenv("POLYMARKET_BACKFILL_LIMIT", "500")),
-        polymarket_backfill_max_pages=int(os.getenv("POLYMARKET_BACKFILL_MAX_PAGES", "5")),
+        polymarket_backfill_limit=int(os.getenv("POLYMARKET_BACKFILL_LIMIT", "200")),
+        polymarket_backfill_max_pages=int(os.getenv("POLYMARKET_BACKFILL_MAX_PAGES", "8")),
         admin_user_ids=_parse_admin_user_ids(os.getenv("ADMIN_USER_IDS", "")),
         persistence_mode=os.getenv("PERSISTENCE_MODE", "sqlite").strip().lower(),
         sqlite_db_path=os.getenv(

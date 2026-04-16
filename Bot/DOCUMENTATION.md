@@ -76,8 +76,8 @@ Bot/
 | `POLYMARKET_MAX_TRADE_AGE_SEC` | Нет (`600`) | Не уведомлять о сделках старше N секунд (защита от «прострела» истории после рестарта) |
 | `POLYMARKET_BACKFILL_ENABLED` | Нет (`true`) | Включить разовый backfill при старте бота |
 | `POLYMARKET_BACKFILL_AGE_SEC` | Нет (`86400`) | Окно backfill (например 24 часа) |
-| `POLYMARKET_BACKFILL_LIMIT` | Нет (`500`) | `limit` для backfill-запросов `/trades` |
-| `POLYMARKET_BACKFILL_MAX_PAGES` | Нет (`5`) | Максимум страниц (offset = page*limit) |
+| `POLYMARKET_BACKFILL_LIMIT` | Нет (`200`) | `limit` для backfill-запросов `/trades` |
+| `POLYMARKET_BACKFILL_MAX_PAGES` | Нет (`8`) | Максимум страниц (offset = page*limit) |
 | `ADMIN_USER_IDS` | Нет (пусто) | Список Telegram user id через запятую для доступа к `/admin_stats` (если пусто — команда доступна всем в локальном MVP) |
 | `PERSISTENCE_MODE` | Нет (`sqlite`) | `sqlite` — подписки и дедуп переживают рестарт; `memory` — состояние сбрасывается |
 | `SQLITE_DB_PATH` | Нет | Путь к SQLite базе (например `./data/bot.sqlite3`) |
