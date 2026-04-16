@@ -75,6 +75,10 @@ class SignalWorker:
             max_pages,
         )
 
+        fetched_trades_total = 0
+        considered_trades_total = 0
+        signals_sent_total = 0
+
         for page in range(max_pages):
             trades = await fetch_large_cash_trades(
                 self._http,
@@ -87,6 +91,7 @@ class SignalWorker:
                 break
 
             min_ts = self._page_min_timestamp(trades)
+            fetched_trades_total += len(trades)
 
             for trade in trades:
                 tx = str(trade.get("transactionHash") or "")
@@ -96,6 +101,7 @@ class SignalWorker:
                 ts = self._trade_timestamp_utc(trade)
                 if not ts or ts < cut_ts:
                     continue
+                considered_trades_total += 1
 
                 category = classify_polymarket_trade(trade)
 
@@ -128,10 +134,12 @@ class SignalWorker:
                             text=text,
                             reply_markup=signal_keyboard(share_url),
                         )
-                        self.context.signal_service.mark_signal_delivered(
+                        delivered = self.context.signal_service.mark_signal_delivered(
                             signal_id,
                             user.telegram_user_id,
                         )
+                        if delivered:
+                            signals_sent_total += 1
                     except Exception:  # noqa: BLE001
                         logger.exception(
                             "Failed to deliver Polymarket backfill signal",
@@ -146,6 +154,12 @@ class SignalWorker:
             offset += limit
 
         logger.info("Backfill finished")
+        logger.info(
+            "Backfill summary: fetched_trades=%s considered_trades=%s signals_sent=%s",
+            fetched_trades_total,
+            considered_trades_total,
+            signals_sent_total,
+        )
 
     async def _tick_polymarket(self) -> None:
         if self._http is None:
