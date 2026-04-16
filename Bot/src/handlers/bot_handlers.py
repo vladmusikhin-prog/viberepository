@@ -36,7 +36,20 @@ def register_handlers(context: AppContext) -> Router:
 
     @router.message(Command("help"))
     async def cmd_help(message: Message) -> None:
-        await message.answer("Используй /start для запуска и /settings для настройки сигналов.")
+        await message.answer("ℹ️ Используй /start для запуска и /settings для настройки сигналов.")
+
+    @router.message(Command("share"))
+    async def cmd_share(message: Message) -> None:
+        if not message.from_user:
+            return
+        user_id = message.from_user.id
+        invite_url = context.signal_service.build_invite_link(user_id)
+        share_msg = context.signal_service.build_share_text(user_id)
+        await message.answer(
+            "📨 Поделись с другом:\n\n"
+            f"{share_msg}\n\n"
+            f"🔗 Ссылка: {invite_url}"
+        )
 
     @router.message(Command("settings"))
     async def cmd_settings(message: Message) -> None:
@@ -52,7 +65,7 @@ def register_handlers(context: AppContext) -> Router:
         user_id = message.from_user.id
         logger.info("Admin stats requested by user_id=%s", user_id)
         if not context.admin_service.is_admin(user_id):
-            await message.answer("Команда недоступна.")
+            await message.answer("⛔ Команда недоступна.")
             return
         await message.answer(context.admin_service.render_stats())
 
@@ -92,13 +105,13 @@ def register_handlers(context: AppContext) -> Router:
     @router.callback_query(F.data == "go_live")
     async def cb_go_live(callback: CallbackQuery) -> None:
         await callback.answer()
-        await callback.message.answer("Live-сигналы включены. Жди реальные алерты по выбранным категориям.")
+        await callback.message.answer("✅ Live-сигналы включены. Жди реальные алерты по выбранным категориям.")
 
     @router.callback_query(F.data.startswith("feedback:"))
     async def cb_feedback(callback: CallbackQuery) -> None:
         if not callback.from_user:
             return
-        await callback.answer("Спасибо за фидбек")
+        await callback.answer("💙 Спасибо за фидбек")
         reaction = callback.data.split(":", maxsplit=1)[1]
         context.feedback_service.record_feedback(callback.from_user.id, reaction)
 
@@ -106,14 +119,15 @@ def register_handlers(context: AppContext) -> Router:
     async def cb_share_friend(callback: CallbackQuery) -> None:
         if not callback.from_user:
             return
+        logger.info("Share callback by user_id=%s", callback.from_user.id)
         await callback.answer()
         user_id = callback.from_user.id
         invite_url = context.signal_service.build_invite_link(user_id)
         share_msg = context.signal_service.build_share_text(user_id)
         await callback.message.answer(
-            "Скопируй и отправь другу:\n\n"
+            "📨 Скопируй и отправь другу:\n\n"
             f"{share_msg}\n\n"
-            f"Ссылка: {invite_url}"
+            f"🔗 Ссылка: {invite_url}"
         )
 
     @router.callback_query(F.data == "disable_live")

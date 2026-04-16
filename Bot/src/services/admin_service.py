@@ -21,11 +21,11 @@ class AdminService:
         total_helpful = sum(u.helpful_count for u in users)
         total_signals_counter = sum(u.signals_received for u in users)
         return (
-            "Admin stats\n"
-            f"Total users: {len(users)}\n"
-            f"Active subscriptions: {active}\n"
-            f"Delivered signals (guard): {self.signal_repo.delivered_count()}\n"
-            f"Signal rows stored: {self.signal_repo.signal_count()}\n"
-            f"Signals counter sum (N): {total_signals_counter}\n"
-            f"Helpful feedback sum (M): {total_helpful}"
+            "🛠 Admin stats\n"
+            f"👥 Total users: {len(users)}\n"
+            f"🟢 Active subscriptions: {active}\n"
+            f"📬 Delivered signals (guard): {self.signal_repo.delivered_count()}\n"
+            f"🗂 Signal rows stored: {self.signal_repo.signal_count()}\n"
+            f"📥 Signals counter sum (N): {total_signals_counter}\n"
+            f"👍 Helpful feedback sum (M): {total_helpful}"
         )
