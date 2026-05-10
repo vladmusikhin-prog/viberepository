@@ -95,10 +95,6 @@ def register_handlers(context: AppContext) -> Router:
             reply_markup=activation_success_keyboard(),
         )
 
-    @router.callback_query(F.data.startswith("feedback:"))
-    async def cb_legacy_feedback(callback: CallbackQuery) -> None:
-        await callback.answer("Кнопки оценки отключены.", show_alert=False)
-
     @router.callback_query(F.data == "share_friend")
     async def cb_share_friend(callback: CallbackQuery) -> None:
         if not callback.from_user:
