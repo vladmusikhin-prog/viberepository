@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 
 from src.services.admin_service import AdminService
-from src.services.feedback_service import FeedbackService
 from src.services.settings_service import SettingsService
 from src.services.signal_service import SignalService
 from src.services.user_service import UserService
@@ -15,7 +14,6 @@ from src.config import Settings
 class AppContext:
     user_service: UserService
     signal_service: SignalService
-    feedback_service: FeedbackService
     settings_service: SettingsService
     admin_service: AdminService
 
@@ -35,13 +33,11 @@ def build_context(settings: Settings) -> AppContext:
         whale_threshold_usd=settings.whale_threshold_usd,
         bot_username=settings.bot_username,
     )
-    feedback_service = FeedbackService(user_repo)
     settings_service = SettingsService(user_repo)
     admin_service = AdminService(user_repo, signal_repo, settings.admin_user_ids)
     return AppContext(
         user_service=user_service,
         signal_service=signal_service,
-        feedback_service=feedback_service,
         settings_service=settings_service,
         admin_service=admin_service,
     )

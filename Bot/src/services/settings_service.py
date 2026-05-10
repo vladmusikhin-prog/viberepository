@@ -11,6 +11,5 @@ class SettingsService:
             f"🎯 Категории: {categories}\n"
             f"🔔 Статус сигналов: {live_status}\n\n"
             "📊 Твоя статистика\n"
-            f"📥 Получено сигналов: {user.signals_received}\n"
-            f"👍 Отмечено полезными: {user.helpful_count}"
+            f"📥 Получено сигналов: {user.signals_received}"
         )

@@ -10,10 +10,8 @@ def test_admin_service_permissions_and_stats() -> None:
     u2 = user_repo.get_or_create(2)
     u1.is_live_enabled = True
     u1.signals_received = 3
-    u1.helpful_count = 2
     u2.is_live_enabled = False
     u2.signals_received = 1
-    u2.helpful_count = 1
 
     assert signal_repo.mark_delivered("pm-a", 1) is True
     assert signal_repo.mark_delivered("pm-b", 1) is True
@@ -29,7 +27,6 @@ def test_admin_service_permissions_and_stats() -> None:
     assert "Active subscriptions: 1" in text
     assert "Delivered signals (guard): 3" in text
     assert "Signals counter sum (N): 4" in text
-    assert "Helpful feedback sum (M): 3" in text
 
 
 def test_admin_service_allows_all_when_not_configured() -> None:

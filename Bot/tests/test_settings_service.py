@@ -8,9 +8,7 @@ def test_settings_stats_rendered() -> None:
     user.categories = ["Politics"]
     user.is_live_enabled = True
     user.signals_received = 5
-    user.helpful_count = 2
 
     text = SettingsService(repo).render_settings(1)
 
     assert "Получено сигналов: 5" in text
-    assert "Отмечено полезными: 2" in text

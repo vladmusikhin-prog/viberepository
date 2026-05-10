@@ -18,7 +18,6 @@ class AdminService:
     def render_stats(self) -> str:
         users = self.user_repo.all_users()
         active = sum(1 for u in users if u.is_live_enabled)
-        total_helpful = sum(u.helpful_count for u in users)
         total_signals_counter = sum(u.signals_received for u in users)
         return (
             "🛠 Admin stats\n"
@@ -26,6 +25,5 @@ class AdminService:
             f"🟢 Active subscriptions: {active}\n"
             f"📬 Delivered signals (guard): {self.signal_repo.delivered_count()}\n"
             f"🗂 Signal rows stored: {self.signal_repo.signal_count()}\n"
-            f"📥 Signals counter sum (N): {total_signals_counter}\n"
-            f"👍 Helpful feedback sum (M): {total_helpful}"
+            f"📥 Signals counter sum (N): {total_signals_counter}"
         )

@@ -55,10 +55,6 @@ def how_it_works_keyboard() -> InlineKeyboardMarkup:
 def signal_keyboard() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
-            [
-                InlineKeyboardButton(text="👍 Полезно", callback_data="feedback:helpful"),
-                InlineKeyboardButton(text="👎 Не полезно", callback_data="feedback:not_helpful"),
-            ],
             [InlineKeyboardButton(text="📨 Поделиться с другом", callback_data="share_friend")],
             [_main_menu_button()],
         ]

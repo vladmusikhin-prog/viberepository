@@ -14,7 +14,6 @@ class User:
     is_live_enabled: bool = False
     created_at: datetime = field(default_factory=utc_now)
     signals_received: int = 0
-    helpful_count: int = 0
 
 
 @dataclass

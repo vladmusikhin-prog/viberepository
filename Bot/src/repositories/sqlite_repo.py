@@ -78,7 +78,6 @@ class SQLiteUserRepository:
                 is_live_enabled=bool(row["is_live_enabled"]),
                 created_at=_parse_dt(row["created_at"]),
                 signals_received=int(row["signals_received"]),
-                helpful_count=int(row["helpful_count"]),
             )
 
     def get(self, telegram_user_id: int) -> Optional[User]:
@@ -95,7 +94,6 @@ class SQLiteUserRepository:
                 is_live_enabled=bool(row["is_live_enabled"]),
                 created_at=_parse_dt(row["created_at"]),
                 signals_received=int(row["signals_received"]),
-                helpful_count=int(row["helpful_count"]),
             )
 
     def update_categories(self, telegram_user_id: int, categories: List[str]) -> User:
@@ -147,18 +145,6 @@ class SQLiteUserRepository:
             )
             conn.commit()
 
-    def increment_helpful(self, telegram_user_id: int) -> None:
-        with self._lock, self._connect() as conn:
-            conn.execute(
-                """
-                UPDATE users
-                SET helpful_count = helpful_count + 1
-                WHERE telegram_user_id=?
-                """,
-                (telegram_user_id,),
-            )
-            conn.commit()
-
     def all_users(self) -> List[User]:
         with self._lock, self._connect() as conn:
             rows = conn.execute("SELECT * FROM users").fetchall()
@@ -171,7 +157,6 @@ class SQLiteUserRepository:
                         is_live_enabled=bool(row["is_live_enabled"]),
                         created_at=_parse_dt(row["created_at"]),
                         signals_received=int(row["signals_received"]),
-                        helpful_count=int(row["helpful_count"]),
                     )
                 )
             return out

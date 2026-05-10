@@ -35,10 +35,6 @@ class UserRepository:
         user = self.get_or_create(telegram_user_id)
         user.signals_received += 1
 
-    def increment_helpful(self, telegram_user_id: int) -> None:
-        user = self.get_or_create(telegram_user_id)
-        user.helpful_count += 1
-
     def all_users(self) -> List[User]:
         return list(self._users.values())
 

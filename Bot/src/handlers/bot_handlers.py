@@ -96,12 +96,8 @@ def register_handlers(context: AppContext) -> Router:
         )
 
     @router.callback_query(F.data.startswith("feedback:"))
-    async def cb_feedback(callback: CallbackQuery) -> None:
-        if not callback.from_user:
-            return
-        await callback.answer("💙 Спасибо за фидбек")
-        reaction = callback.data.split(":", maxsplit=1)[1]
-        context.feedback_service.record_feedback(callback.from_user.id, reaction)
+    async def cb_legacy_feedback(callback: CallbackQuery) -> None:
+        await callback.answer("Кнопки оценки отключены.", show_alert=False)
 
     @router.callback_query(F.data == "share_friend")
     async def cb_share_friend(callback: CallbackQuery) -> None:
