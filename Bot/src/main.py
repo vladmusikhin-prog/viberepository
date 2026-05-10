@@ -10,6 +10,7 @@ from src.config import load_settings
 from src.handlers.bot_handlers import register_handlers
 from src.handlers.common import build_context
 from src.logging_setup import configure_logging
+from src.services.keyboards import start_keyboard
 from src.workers.signal_worker import SignalWorker
 
 
@@ -54,6 +55,19 @@ async def main() -> None:
                 worker_task.cancel()
                 with suppress(asyncio.CancelledError):
                     await worker_task
+
+    _start_cta_count = sum(len(row) for row in start_keyboard().inline_keyboard)
+    if _start_cta_count != 1:
+        logger.error(
+            "start_keyboard has %s buttons in /start rows; expected exactly 1 CTA (Активировать). "
+            "Check you are running THIS repo from Bot/ after git pull.",
+            _start_cta_count,
+        )
+    else:
+        logger.info(
+            "start_keyboard OK: single /start CTA (no second info button). "
+            "If Telegram still shows two buttons, another process with the same BOT_TOKEN is likely still running.",
+        )
 
     logger.info(
         "Bot started in polling mode (signal_source=%s)",
