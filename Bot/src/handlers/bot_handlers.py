@@ -10,14 +10,12 @@ from src.handlers.common import AppContext
 from src.services.keyboards import (
     activation_success_keyboard,
     categories_keyboard,
-    how_it_works_keyboard,
     settings_keyboard,
     start_keyboard,
 )
 from src.services.texts import (
     ACTIVATION_SUCCESS_TEXT,
     CATEGORY_PROMPT_TEXT,
-    HOW_IT_WORKS_TEXT,
     START_TEXT,
 )
 
@@ -73,12 +71,7 @@ def register_handlers(context: AppContext) -> Router:
         await callback.answer()
         await callback.message.answer(CATEGORY_PROMPT_TEXT, reply_markup=categories_keyboard())
 
-    @router.callback_query(F.data == "how_it_works")
-    async def cb_how_it_works(callback: CallbackQuery) -> None:
-        await callback.answer()
-        await callback.message.answer(HOW_IT_WORKS_TEXT, reply_markup=how_it_works_keyboard())
-
-    @router.callback_query(F.data.in_(("go_live", "test_signal", "open_test_signal")))
+    @router.callback_query(F.data.in_(("go_live", "test_signal", "open_test_signal", "how_it_works")))
     async def cb_legacy_removed_buttons(callback: CallbackQuery) -> None:
         """Старые inline-кнопки из прошлых версий бота."""
         await callback.answer("Онбординг обновлён: /start → Активировать.", show_alert=False)

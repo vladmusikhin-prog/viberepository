@@ -8,10 +8,7 @@ def _main_menu_button() -> InlineKeyboardButton:
 def start_keyboard() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
-            [
-                InlineKeyboardButton(text="🚀 Активировать", callback_data="activate"),
-                InlineKeyboardButton(text="ℹ️ Как это работает", callback_data="how_it_works"),
-            ]
+            [InlineKeyboardButton(text="🚀 Активировать", callback_data="activate")],
         ]
     )
 
@@ -36,17 +33,6 @@ def activation_success_keyboard() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text="⚙️ Изменить категории", callback_data="activate")],
-            [_main_menu_button()],
-        ]
-    )
-
-
-def how_it_works_keyboard() -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup(
-        inline_keyboard=[
-            [
-                InlineKeyboardButton(text="🚀 Активировать", callback_data="activate"),
-            ],
             [_main_menu_button()],
         ]
     )
