@@ -3,17 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from uuid import uuid4
 
-from src.models.entities import Signal
 from src.services.texts import format_alert_text, share_text
-
-
-def _demo_market_for_category(category: str) -> tuple[str, float, float]:
-    """Placeholder markets aligned with category (MVP demo only)."""
-    if category == "Crypto":
-        return ("Will BTC reach new ATH this quarter?", 186_000.0, 0.58)
-    if category == "Sports":
-        return ("Will Team A win the championship this season?", 142_000.0, 0.52)
-    return ("Will [political outcome] occur before [date]?", 198_000.0, 0.55)
 
 
 class SignalService:
@@ -28,32 +18,6 @@ class SignalService:
         self.signal_repo = signal_repo
         self.whale_threshold_usd = whale_threshold_usd
         self.bot_username = bot_username
-
-    def build_test_signal(self, user_id: int, category: str) -> tuple[str, str]:
-        # Same shape as live; market/size/price match chosen category (not real API).
-        market, size_usd, price = _demo_market_for_category(category)
-        signal = Signal(
-            signal_id=f"test-{uuid4()}",
-            market=market,
-            side="BUY YES",
-            size_usd=size_usd,
-            price=price,
-            category=category,
-            timestamp_utc=datetime.now(timezone.utc),
-            is_test=True,
-            delivered_to_user_id=user_id,
-        )
-        self.signal_repo.save(signal)
-        text = format_alert_text(
-            market=signal.market,
-            side=signal.side,
-            size_usd=signal.size_usd,
-            price=signal.price,
-            timestamp_utc=signal.timestamp_utc.strftime("%H:%M"),
-            whale_threshold_usd=self.whale_threshold_usd,
-            category=signal.category,
-        )
-        return text, self.build_invite_link(user_id)
 
     def build_polymarket_trade_alert(
         self,

@@ -35,18 +35,18 @@ def categories_keyboard() -> InlineKeyboardMarkup:
 def activation_success_keyboard() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text="🧪 Получить тестовый сигнал", callback_data="test_signal")],
             [InlineKeyboardButton(text="⚙️ Изменить категории", callback_data="activate")],
             [_main_menu_button()],
         ]
     )
 
 
-def preview_keyboard() -> InlineKeyboardMarkup:
+def how_it_works_keyboard() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text="👀 Открыть тестовый сигнал", callback_data="open_test_signal")],
-            [InlineKeyboardButton(text="🔔 Получить live-сигналы", callback_data="go_live")],
+            [
+                InlineKeyboardButton(text="🚀 Активировать", callback_data="activate"),
+            ],
             [_main_menu_button()],
         ]
     )

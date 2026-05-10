@@ -10,15 +10,14 @@ from src.handlers.common import AppContext
 from src.services.keyboards import (
     activation_success_keyboard,
     categories_keyboard,
-    preview_keyboard,
+    how_it_works_keyboard,
     settings_keyboard,
-    signal_keyboard,
     start_keyboard,
 )
 from src.services.texts import (
     ACTIVATION_SUCCESS_TEXT,
     CATEGORY_PROMPT_TEXT,
-    PREVIEW_INTRO_TEXT,
+    HOW_IT_WORKS_TEXT,
     START_TEXT,
 )
 
@@ -77,7 +76,12 @@ def register_handlers(context: AppContext) -> Router:
     @router.callback_query(F.data == "how_it_works")
     async def cb_how_it_works(callback: CallbackQuery) -> None:
         await callback.answer()
-        await callback.message.answer(PREVIEW_INTRO_TEXT, reply_markup=preview_keyboard())
+        await callback.message.answer(HOW_IT_WORKS_TEXT, reply_markup=how_it_works_keyboard())
+
+    @router.callback_query(F.data.in_(("go_live", "test_signal", "open_test_signal")))
+    async def cb_legacy_removed_buttons(callback: CallbackQuery) -> None:
+        """Старые inline-кнопки из прошлых версий бота."""
+        await callback.answer("Онбординг обновлён: /start → Активировать.", show_alert=False)
 
     @router.callback_query(F.data.startswith("category:"))
     async def cb_category(callback: CallbackQuery) -> None:
@@ -90,22 +94,6 @@ def register_handlers(context: AppContext) -> Router:
             ACTIVATION_SUCCESS_TEXT,
             reply_markup=activation_success_keyboard(),
         )
-
-    @router.callback_query(F.data == "test_signal")
-    @router.callback_query(F.data == "open_test_signal")
-    async def cb_test_signal(callback: CallbackQuery) -> None:
-        if not callback.from_user:
-            return
-        await callback.answer()
-        user = context.user_service.ensure_user(callback.from_user.id)
-        category = user.categories[0] if user.categories else "Politics"
-        text, _invite_url = context.signal_service.build_test_signal(callback.from_user.id, category)
-        await callback.message.answer(text, reply_markup=signal_keyboard())
-
-    @router.callback_query(F.data == "go_live")
-    async def cb_go_live(callback: CallbackQuery) -> None:
-        await callback.answer()
-        await callback.message.answer("✅ Live-сигналы включены. Жди реальные алерты по выбранным категориям.")
 
     @router.callback_query(F.data.startswith("feedback:"))
     async def cb_feedback(callback: CallbackQuery) -> None:
