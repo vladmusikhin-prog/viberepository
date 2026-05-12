@@ -1,6 +1,7 @@
 import asyncio
 from contextlib import suppress
 import logging
+from pathlib import Path
 
 import aiohttp
 from aiogram import Bot, Dispatcher
@@ -11,6 +12,7 @@ from src.handlers.bot_handlers import register_handlers
 from src.handlers.common import build_context
 from src.logging_setup import configure_logging
 from src.services.keyboards import start_keyboard
+from src.single_instance import SingleInstanceLock
 from src.workers.signal_worker import SignalWorker
 
 
@@ -77,4 +79,12 @@ async def main() -> None:
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    _bot_root = Path(__file__).resolve().parent.parent
+    _lock_path = _bot_root / "data" / ".bot_singleton.lock"
+    _lock = SingleInstanceLock(_lock_path)
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
+    try:
+        _lock.acquire()
+        asyncio.run(main())
+    finally:
+        _lock.release()

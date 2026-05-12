@@ -2,7 +2,7 @@
 
 MVP Telegram-бот `Polymarket Signals` на `Python + aiogram`.
 
-**Версия:** 0.3.0 · **Полная документация:** [DOCUMENTATION.md](DOCUMENTATION.md)
+**Версия:** 0.3.1 · **Полная документация:** [DOCUMENTATION.md](DOCUMENTATION.md)
 
 ## Структура
 
@@ -23,7 +23,7 @@ python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
 ```
 
-4. Запусти бота (из папки `Bot/`):
+4. Запусти бота (из папки `Bot/`). Второй параллельный запуск из **того же** каталога завершится сразу (файловый lock `data/.bot_singleton.lock`).
 
 ```bash
 .venv/bin/python -m src.main
