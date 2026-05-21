@@ -1,0 +1,8 @@
+# Railway platform config. Railpack BUILD читает railpack.json (не этот файл).
+# Root Directory в UI: Bot
+[build]
+builder = "RAILPACK"
+
+[deploy]
+startCommand = "python -m src.main"
+restartPolicyType = "ON_FAILURE"

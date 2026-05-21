@@ -113,6 +113,25 @@ chmod +x run.sh
 
 ---
 
+## 5.1 Деплой на Railway
+
+Ошибка `Railpack could not determine how to build` при корне репозитория `viberepository/` — нормальна: Python лежит в **`Bot/`**, а не в корне монорепо.
+
+В сервисе Railway (**Settings → Source** или **Build**):
+
+| Поле | Значение |
+|------|----------|
+| **Root Directory** | `Bot` |
+| **Start Command** (если спрашивают) | `python -m src.main` |
+
+**Variables:** минимум `BOT_TOKEN`; остальное — по `.env.example`.
+
+Конфиг: `Bot/railpack.json` (команда старта для Railpack) и `Bot/railway.toml`. В UI можно дублировать **Start Command:** `python -m src.main`. После push — **Redeploy**.
+
+Не держи бота **одновременно** на Mac и Railway с одним `BOT_TOKEN`.
+
+---
+
 ## 6. Команды и сценарии
 
 ### Команды
