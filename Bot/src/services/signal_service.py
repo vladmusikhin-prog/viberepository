@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from typing import Optional
 from uuid import uuid4
 
-from src.services.texts import format_alert_text, share_text
+from src.services.texts import format_alert_text, format_trader_stats_block, share_text
+from src.services.trader_stats_service import TraderStats
 
 
 class SignalService:
@@ -13,17 +15,20 @@ class SignalService:
         signal_repo,
         whale_threshold_usd: int,
         bot_username: str,
+        trader_stats_positions_limit: int = 100,
     ) -> None:
         self.user_repo = user_repo
         self.signal_repo = signal_repo
         self.whale_threshold_usd = whale_threshold_usd
         self.bot_username = bot_username
+        self.trader_stats_positions_limit = trader_stats_positions_limit
 
     def build_polymarket_trade_alert(
         self,
         trade: dict,
         product_category: str,
         inviter_telegram_user_id: int,
+        trader_stats: Optional[TraderStats] = None,
     ) -> tuple[str, str, str]:
         """
         Build whale alert from Polymarket Data API trade row (CASH filter).
@@ -48,6 +53,18 @@ class SignalService:
         else:
             time_s = "--:--"
 
+        trader_stats_block = None
+        if trader_stats is not None:
+            trader_stats_block = format_trader_stats_block(
+                display_name=trader_stats.display_name,
+                wins=trader_stats.wins,
+                losses=trader_stats.losses,
+                win_rate_pct=trader_stats.win_rate_pct,
+                total_realized_pnl_usd=trader_stats.total_realized_pnl_usd,
+                positions_sampled=trader_stats.positions_sampled,
+                positions_limit=self.trader_stats_positions_limit,
+            )
+
         text = format_alert_text(
             market=title,
             side=side_label,
@@ -56,6 +73,7 @@ class SignalService:
             timestamp_utc=time_s,
             whale_threshold_usd=self.whale_threshold_usd,
             category=product_category,
+            trader_stats_block=trader_stats_block,
         )
         return signal_id, text, self.build_invite_link(inviter_telegram_user_id)
 

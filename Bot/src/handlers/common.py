@@ -4,6 +4,7 @@ from src.services.admin_service import AdminService
 from src.services.resolution_service import ResolutionService
 from src.services.settings_service import SettingsService
 from src.services.signal_service import SignalService
+from src.services.trader_stats_service import TraderStatsService
 from src.services.user_service import UserService
 from src.repositories.in_memory import SignalRepository as InMemorySignalRepository
 from src.repositories.in_memory import UserRepository as InMemoryUserRepository
@@ -19,6 +20,7 @@ from src.config import Settings
 class AppContext:
     user_service: UserService
     signal_service: SignalService
+    trader_stats_service: TraderStatsService
     resolution_service: ResolutionService
     settings_service: SettingsService
     admin_service: AdminService
@@ -40,6 +42,13 @@ def build_context(settings: Settings) -> AppContext:
         signal_repo=signal_repo,
         whale_threshold_usd=settings.whale_threshold_usd,
         bot_username=settings.bot_username,
+        trader_stats_positions_limit=settings.trader_stats_positions_limit,
+    )
+    trader_stats_service = TraderStatsService(
+        enabled=settings.trader_stats_enabled,
+        positions_limit=settings.trader_stats_positions_limit,
+        cache_ttl_sec=settings.trader_stats_cache_ttl_sec,
+        data_api_base=settings.polymarket_data_api_base,
     )
     resolution_service = ResolutionService(pending_resolution_repo)
     settings_service = SettingsService(user_repo)
@@ -47,6 +56,7 @@ def build_context(settings: Settings) -> AppContext:
     return AppContext(
         user_service=user_service,
         signal_service=signal_service,
+        trader_stats_service=trader_stats_service,
         resolution_service=resolution_service,
         settings_service=settings_service,
         admin_service=admin_service,

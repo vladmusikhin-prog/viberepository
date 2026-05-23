@@ -41,3 +41,42 @@ async def fetch_large_cash_trades(
         logger.warning("Polymarket trades: unexpected JSON shape %s", type(data))
         return []
     return data
+
+
+async def fetch_closed_positions(
+    session: aiohttp.ClientSession,
+    *,
+    base_url: str,
+    user_wallet: str,
+    limit: int,
+    offset: int = 0,
+) -> List[dict[str, Any]]:
+    """
+    GET /closed-positions for a wallet — Polymarket Data API.
+    See: https://docs.polymarket.com/api-reference/core/get-closed-positions-for-a-user
+    """
+    wallet = (user_wallet or "").strip()
+    if not wallet:
+        return []
+
+    url = f"{base_url.rstrip('/')}/closed-positions"
+    params = {
+        "user": wallet,
+        "limit": min(max(int(limit), 1), 50),
+        "offset": max(int(offset), 0),
+        "sortBy": "TIMESTAMP",
+        "sortDirection": "DESC",
+    }
+    timeout = aiohttp.ClientTimeout(total=30)
+    try:
+        async with session.get(url, params=params, timeout=timeout) as resp:
+            resp.raise_for_status()
+            data = await resp.json()
+    except (aiohttp.ClientError, TimeoutError, OSError) as e:
+        logger.warning("Polymarket closed-positions request failed: %s", e)
+        return []
+
+    if not isinstance(data, list):
+        logger.warning("Polymarket closed-positions: unexpected JSON shape %s", type(data))
+        return []
+    return data

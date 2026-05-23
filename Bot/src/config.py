@@ -76,6 +76,9 @@ class Settings:
     polymarket_resolution_poll_interval_sec: int
     polymarket_resolution_batch_size: int
     polymarket_gamma_api_base: str
+    trader_stats_enabled: bool
+    trader_stats_positions_limit: int
+    trader_stats_cache_ttl_sec: int
     admin_user_ids: tuple[int, ...]
     persistence_mode: str  # memory | sqlite
     sqlite_db_path: str
@@ -120,6 +123,12 @@ def load_settings() -> Settings:
         polymarket_gamma_api_base=os.getenv(
             "POLYMARKET_GAMMA_API_BASE", "https://gamma-api.polymarket.com"
         ).rstrip("/"),
+        trader_stats_enabled=(
+            os.getenv("TRADER_STATS_ENABLED", "true").strip().lower()
+            in ("1", "true", "yes", "y", "on")
+        ),
+        trader_stats_positions_limit=int(os.getenv("TRADER_STATS_POSITIONS_LIMIT", "100")),
+        trader_stats_cache_ttl_sec=int(os.getenv("TRADER_STATS_CACHE_TTL_SEC", "3600")),
         admin_user_ids=_parse_admin_user_ids(os.getenv("ADMIN_USER_IDS", "")),
         persistence_mode=os.getenv("PERSISTENCE_MODE", "sqlite").strip().lower(),
         sqlite_db_path=os.getenv(

@@ -211,10 +211,15 @@ class SignalWorker:
                 )
 
     async def _deliver_trade_alert(self, *, trade: dict, category: str, user) -> bool:
+        trader_stats = await self.context.trader_stats_service.get_stats_for_trade(
+            self._http,
+            trade,
+        )
         signal_id, text, _invite_url = self.context.signal_service.build_polymarket_trade_alert(
             trade,
             category,
             user.telegram_user_id,
+            trader_stats=trader_stats,
         )
         if self.context.signal_service.is_signal_delivered(signal_id, user.telegram_user_id):
             return False

@@ -72,6 +72,29 @@ def format_activation_example_text(*, category: str, whale_threshold_usd: int) -
 🏁 После закрытия рынка придёт второе сообщение с итогом (выигрыш или проигрыш ставки кита)."""
 
 
+def format_trader_stats_block(
+    *,
+    display_name: str,
+    wins: int,
+    losses: int,
+    win_rate_pct: int,
+    total_realized_pnl_usd: float,
+    positions_sampled: int,
+    positions_limit: int,
+) -> str:
+    pnl_label = _format_pnl(total_realized_pnl_usd)
+    sample_note = (
+        f"последние {positions_sampled} закрытых позиций"
+        if positions_sampled < positions_limit
+        else f"последние {positions_limit} закрытых позиций"
+    )
+    return (
+        f"👤 Кит: {display_name}\n"
+        f"📊 WR: {win_rate_pct}% ({wins}/{wins + losses} успешных закрытых позиций)\n"
+        f"💰 Realized P&L ({sample_note}): {pnl_label}"
+    )
+
+
 def format_alert_text(
     market: str,
     side: str,
@@ -80,7 +103,9 @@ def format_alert_text(
     timestamp_utc: str,
     whale_threshold_usd: int,
     category: str,
+    trader_stats_block: str | None = None,
 ) -> str:
+    trader_section = f"\n{trader_stats_block}\n" if trader_stats_block else ""
     return f"""🐋 Whale Alert: крупное размещение
 
 🎯 Рынок: {market}
@@ -89,7 +114,7 @@ def format_alert_text(
 💵 Размер: ${size_usd:,.0f}
 💲 Цена: {price:.2f}
 🕒 Время: {timestamp_utc} UTC
-
+{trader_section}
 📏 Критерий whale: >= ${whale_threshold_usd / 1000:.0f}k
 🏷 Категория: {category}"""
 
