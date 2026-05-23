@@ -14,9 +14,9 @@ from src.services.keyboards import (
     start_keyboard,
 )
 from src.services.texts import (
-    ACTIVATION_SUCCESS_TEXT,
     CATEGORY_PROMPT_TEXT,
     START_TEXT,
+    format_activation_example_text,
 )
 
 router = Router()
@@ -83,8 +83,12 @@ def register_handlers(context: AppContext) -> Router:
         await callback.answer()
         category = callback.data.split(":", maxsplit=1)[1]
         context.user_service.activate_categories(callback.from_user.id, category)
+        activation_text = format_activation_example_text(
+            category=category,
+            whale_threshold_usd=context.signal_service.whale_threshold_usd,
+        )
         await callback.message.answer(
-            ACTIVATION_SUCCESS_TEXT,
+            activation_text,
             reply_markup=activation_success_keyboard(),
         )
 
