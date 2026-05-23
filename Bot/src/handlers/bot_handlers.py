@@ -3,10 +3,11 @@ from __future__ import annotations
 import logging
 
 from aiogram import F, Router
-from aiogram.filters import Command
+from aiogram.filters import Command, CommandObject, CommandStart
 from aiogram.types import CallbackQuery, Message
 
 from src.handlers.common import AppContext
+from src.handlers.start_helpers import is_invite_deep_link
 from src.services.keyboards import (
     activation_success_keyboard,
     categories_keyboard,
@@ -15,6 +16,7 @@ from src.services.keyboards import (
 )
 from src.services.texts import (
     CATEGORY_PROMPT_TEXT,
+    INVITE_ALREADY_ACTIVE_TEXT,
     START_TEXT,
     format_activation_example_text,
 )
@@ -24,11 +26,17 @@ logger = logging.getLogger(__name__)
 
 
 def register_handlers(context: AppContext) -> Router:
-    @router.message(Command("start"))
-    async def cmd_start(message: Message) -> None:
+    @router.message(CommandStart())
+    async def cmd_start(message: Message, command: CommandObject) -> None:
         if not message.from_user:
             return
-        context.user_service.ensure_user(message.from_user.id)
+        user = context.user_service.ensure_user(message.from_user.id)
+        if is_invite_deep_link(command.args) and user.is_live_enabled:
+            await message.answer(
+                INVITE_ALREADY_ACTIVE_TEXT,
+                reply_markup=settings_keyboard(),
+            )
+            return
         await message.answer(START_TEXT, reply_markup=start_keyboard())
 
     @router.message(Command("help"))

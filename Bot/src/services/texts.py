@@ -9,6 +9,11 @@ START_TEXT = """🐋 Whale Signals Bot
 
 CATEGORY_PROMPT_TEXT = "🎯 Выбери, что тебе сейчас важнее."
 
+INVITE_ALREADY_ACTIVE_TEXT = """🙌 Спасибо, что вы с нами!
+
+🔔 Твоя подписка уже активна — whale-сигналы продолжают приходить сюда.
+⚙️ Настройки можно посмотреть ниже или через /settings."""
+
 ACTIVATION_SUCCESS_TEXT = """✅ Готово. Подписка на категории включена."""
 
 _ACTIVATION_EXAMPLES: dict[str, dict[str, str | float]] = {
