@@ -13,6 +13,21 @@ def start_keyboard() -> InlineKeyboardMarkup:
     )
 
 
+def main_menu_active_keyboard() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="⚙️ Изменить категорию", callback_data="activate")],
+            [InlineKeyboardButton(text="🔕 Деактивировать уведомления", callback_data="disable_live")],
+        ]
+    )
+
+
+def main_menu_keyboard(is_live_enabled: bool) -> InlineKeyboardMarkup:
+    if is_live_enabled:
+        return main_menu_active_keyboard()
+    return start_keyboard()
+
+
 def categories_keyboard() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
@@ -32,7 +47,7 @@ def categories_keyboard() -> InlineKeyboardMarkup:
 def activation_success_keyboard() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text="⚙️ Изменить категории", callback_data="activate")],
+            [InlineKeyboardButton(text="⚙️ Изменить категорию", callback_data="activate")],
             [_main_menu_button()],
         ]
     )
@@ -47,11 +62,16 @@ def signal_keyboard() -> InlineKeyboardMarkup:
     )
 
 
-def settings_keyboard() -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup(
-        inline_keyboard=[
-            [InlineKeyboardButton(text="⚙️ Изменить категории", callback_data="activate")],
-            [InlineKeyboardButton(text="🔕 Выключить сигналы", callback_data="disable_live")],
-            [_main_menu_button()],
-        ]
-    )
+def settings_keyboard(is_live_enabled: bool) -> InlineKeyboardMarkup:
+    rows = []
+    if is_live_enabled:
+        rows.append(
+            [InlineKeyboardButton(text="⚙️ Изменить категорию", callback_data="activate")]
+        )
+        rows.append(
+            [InlineKeyboardButton(text="🔕 Деактивировать уведомления", callback_data="disable_live")]
+        )
+    else:
+        rows.append([InlineKeyboardButton(text="🚀 Активировать", callback_data="activate")])
+    rows.append([_main_menu_button()])
+    return InlineKeyboardMarkup(inline_keyboard=rows)

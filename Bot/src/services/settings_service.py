@@ -2,6 +2,22 @@ class SettingsService:
     def __init__(self, user_repo) -> None:
         self.user_repo = user_repo
 
+    def render_main_menu(self, user_id: int) -> str:
+        user = self.user_repo.get_or_create(user_id)
+        if not user.is_live_enabled:
+            return (
+                "🏠 Главное меню\n\n"
+                "🔔 Уведомления сейчас выключены.\n"
+                "Нажми «Активировать», чтобы снова получать whale-сигналы."
+            )
+        categories = ", ".join(user.categories) if user.categories else "Не выбраны"
+        return (
+            "🏠 Главное меню\n\n"
+            f"🔔 Статус: уведомления включены\n"
+            f"🎯 Категории: {categories}\n\n"
+            "Выбери действие:"
+        )
+
     def render_settings(self, user_id: int) -> str:
         user = self.user_repo.get_or_create(user_id)
         categories = ", ".join(user.categories) if user.categories else "Не выбраны"

@@ -11,12 +11,14 @@ from src.handlers.start_helpers import is_invite_deep_link
 from src.services.keyboards import (
     activation_success_keyboard,
     categories_keyboard,
+    main_menu_keyboard,
     settings_keyboard,
     start_keyboard,
 )
 from src.services.texts import (
     CATEGORY_PROMPT_TEXT,
     INVITE_ALREADY_ACTIVE_TEXT,
+    NOTIFICATIONS_DISABLED_TEXT,
     START_TEXT,
     format_activation_example_text,
 )
@@ -34,7 +36,13 @@ def register_handlers(context: AppContext) -> Router:
         if is_invite_deep_link(command.args) and user.is_live_enabled:
             await message.answer(
                 INVITE_ALREADY_ACTIVE_TEXT,
-                reply_markup=settings_keyboard(),
+                reply_markup=settings_keyboard(user.is_live_enabled),
+            )
+            return
+        if user.is_live_enabled:
+            await message.answer(
+                context.settings_service.render_main_menu(message.from_user.id),
+                reply_markup=main_menu_keyboard(True),
             )
             return
         await message.answer(START_TEXT, reply_markup=start_keyboard())
@@ -60,8 +68,9 @@ def register_handlers(context: AppContext) -> Router:
     async def cmd_settings(message: Message) -> None:
         if not message.from_user:
             return
+        user = context.user_service.ensure_user(message.from_user.id)
         text = context.settings_service.render_settings(message.from_user.id)
-        await message.answer(text, reply_markup=settings_keyboard())
+        await message.answer(text, reply_markup=settings_keyboard(user.is_live_enabled))
 
     @router.message(Command("admin_stats"))
     async def cmd_admin_stats(message: Message) -> None:
@@ -121,15 +130,21 @@ def register_handlers(context: AppContext) -> Router:
             return
         await callback.answer()
         context.user_service.disable_live(callback.from_user.id)
-        text = context.settings_service.render_settings(callback.from_user.id)
-        await callback.message.answer(text, reply_markup=settings_keyboard())
+        await callback.message.answer(
+            NOTIFICATIONS_DISABLED_TEXT,
+            reply_markup=start_keyboard(),
+        )
 
     @router.callback_query(F.data == "main_menu")
     async def cb_main_menu(callback: CallbackQuery) -> None:
         if not callback.from_user:
             return
         await callback.answer()
-        context.user_service.ensure_user(callback.from_user.id)
-        await callback.message.answer(START_TEXT, reply_markup=start_keyboard())
+        user = context.user_service.ensure_user(callback.from_user.id)
+        text = context.settings_service.render_main_menu(callback.from_user.id)
+        await callback.message.answer(
+            text,
+            reply_markup=main_menu_keyboard(user.is_live_enabled),
+        )
 
     return router
