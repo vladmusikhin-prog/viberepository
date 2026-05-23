@@ -102,7 +102,9 @@ def register_handlers(context: AppContext) -> Router:
         context.user_service.activate_categories(callback.from_user.id, category)
         activation_text = format_activation_example_text(
             category=category,
-            whale_threshold_usd=context.signal_service.whale_threshold_usd,
+            whale_threshold_usd=context.signal_service.whale_threshold_for_category(
+                category,
+            ),
         )
         await callback.message.answer(
             activation_text,

@@ -58,6 +58,7 @@ class Settings:
     bot_token: str
     bot_username: str
     whale_threshold_usd: int
+    whale_threshold_crypto_usd: int
     signal_poll_interval_sec: int
     alert_max_price: float
     alert_max_price_crypto: float
@@ -83,6 +84,14 @@ class Settings:
     persistence_mode: str  # memory | sqlite
     sqlite_db_path: str
 
+    def whale_threshold_for_category(self, category: str) -> int:
+        if category == "Crypto":
+            return self.whale_threshold_crypto_usd
+        return self.whale_threshold_usd
+
+    def api_whale_fetch_threshold_usd(self) -> int:
+        return min(self.whale_threshold_usd, self.whale_threshold_crypto_usd)
+
 
 def load_settings() -> Settings:
     token = os.getenv("BOT_TOKEN", "").strip()
@@ -96,6 +105,7 @@ def load_settings() -> Settings:
         bot_token=token,
         bot_username=username,
         whale_threshold_usd=int(os.getenv("WHALE_THRESHOLD_USD", "100000")),
+        whale_threshold_crypto_usd=int(os.getenv("WHALE_THRESHOLD_CRYPTO", "20000")),
         signal_poll_interval_sec=int(os.getenv("SIGNAL_POLL_INTERVAL_SEC", "30")),
         alert_max_price=float(os.getenv("ALERT_MAX_PRICE", "0.95")),
         alert_max_price_crypto=float(os.getenv("ALERT_MAX_PRICE_CRYPTO", "0.999")),

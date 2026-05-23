@@ -15,3 +15,10 @@ def test_activation_example_category_politics() -> None:
     text = format_activation_example_text(category="Politics", whale_threshold_usd=100_000)
     assert "Prime Minister" in text
     assert "Politics" in text
+
+
+def test_activation_example_category_crypto_uses_lower_threshold() -> None:
+    text = format_activation_example_text(category="Crypto", whale_threshold_usd=20_000)
+    assert "Bitcoin" in text
+    assert ">= $20k" in text
+    assert "от $20k+" in text

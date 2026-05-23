@@ -67,6 +67,17 @@ class SignalWorker:
         except (TypeError, ValueError):
             return 0.0
 
+    def _trade_size_usd(self, trade: dict) -> float:
+        try:
+            return float(trade.get("size") or 0.0)
+        except (TypeError, ValueError):
+            return 0.0
+
+    def _meets_whale_threshold(self, trade: dict, category: str) -> bool:
+        return self._trade_size_usd(trade) >= self.settings.whale_threshold_for_category(
+            category,
+        )
+
     def _max_alert_price(self, category: str) -> float:
         if category == "Crypto":
             return self.settings.alert_max_price_crypto
@@ -102,7 +113,7 @@ class SignalWorker:
             trades = await fetch_large_cash_trades(
                 self._http,
                 base_url=self.settings.polymarket_data_api_base,
-                min_cash_usd=int(self.settings.whale_threshold_usd),
+                min_cash_usd=self.settings.api_whale_fetch_threshold_usd(),
                 limit=limit,
                 offset=offset,
             )
@@ -122,6 +133,8 @@ class SignalWorker:
                     continue
 
                 category = classify_polymarket_trade(trade)
+                if not self._meets_whale_threshold(trade, category):
+                    continue
                 price = self._trade_price(trade)
                 if not self._is_alertable_price(price, category):
                     continue
@@ -168,7 +181,7 @@ class SignalWorker:
         trades = await fetch_large_cash_trades(
             self._http,
             base_url=self.settings.polymarket_data_api_base,
-            min_cash_usd=int(self.settings.whale_threshold_usd),
+            min_cash_usd=self.settings.api_whale_fetch_threshold_usd(),
             limit=self.settings.polymarket_trades_limit,
         )
         if not trades:
@@ -190,6 +203,8 @@ class SignalWorker:
                 continue
 
             category = classify_polymarket_trade(trade)
+            if not self._meets_whale_threshold(trade, category):
+                continue
             price = self._trade_price(trade)
             if not self._is_alertable_price(price, category):
                 continue

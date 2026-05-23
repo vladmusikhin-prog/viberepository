@@ -14,14 +14,21 @@ class SignalService:
         user_repo,
         signal_repo,
         whale_threshold_usd: int,
+        whale_threshold_crypto_usd: int,
         bot_username: str,
         trader_stats_positions_limit: int = 100,
     ) -> None:
         self.user_repo = user_repo
         self.signal_repo = signal_repo
         self.whale_threshold_usd = whale_threshold_usd
+        self.whale_threshold_crypto_usd = whale_threshold_crypto_usd
         self.bot_username = bot_username
         self.trader_stats_positions_limit = trader_stats_positions_limit
+
+    def whale_threshold_for_category(self, category: str) -> int:
+        if category == "Crypto":
+            return self.whale_threshold_crypto_usd
+        return self.whale_threshold_usd
 
     def build_polymarket_trade_alert(
         self,
@@ -71,7 +78,7 @@ class SignalService:
             size_usd=size_usd,
             price=price,
             timestamp_utc=time_s,
-            whale_threshold_usd=self.whale_threshold_usd,
+            whale_threshold_usd=self.whale_threshold_for_category(product_category),
             category=product_category,
             trader_stats_block=trader_stats_block,
         )
