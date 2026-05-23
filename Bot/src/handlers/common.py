@@ -1,11 +1,16 @@
 from dataclasses import dataclass
 
 from src.services.admin_service import AdminService
+from src.services.resolution_service import ResolutionService
 from src.services.settings_service import SettingsService
 from src.services.signal_service import SignalService
 from src.services.user_service import UserService
 from src.repositories.in_memory import SignalRepository as InMemorySignalRepository
 from src.repositories.in_memory import UserRepository as InMemoryUserRepository
+from src.repositories.pending_resolution_repo import (
+    InMemoryPendingResolutionRepository,
+    SQLitePendingResolutionRepository,
+)
 from src.repositories.sqlite_repo import SQLiteSignalRepository, SQLiteUserRepository
 from src.config import Settings
 
@@ -14,6 +19,7 @@ from src.config import Settings
 class AppContext:
     user_service: UserService
     signal_service: SignalService
+    resolution_service: ResolutionService
     settings_service: SettingsService
     admin_service: AdminService
 
@@ -22,9 +28,11 @@ def build_context(settings: Settings) -> AppContext:
     if settings.persistence_mode == "sqlite":
         user_repo = SQLiteUserRepository(settings.sqlite_db_path)
         signal_repo = SQLiteSignalRepository(settings.sqlite_db_path)
+        pending_resolution_repo = SQLitePendingResolutionRepository(settings.sqlite_db_path)
     else:
         user_repo = InMemoryUserRepository()
         signal_repo = InMemorySignalRepository()
+        pending_resolution_repo = InMemoryPendingResolutionRepository()
 
     user_service = UserService(user_repo)
     signal_service = SignalService(
@@ -33,11 +41,13 @@ def build_context(settings: Settings) -> AppContext:
         whale_threshold_usd=settings.whale_threshold_usd,
         bot_username=settings.bot_username,
     )
+    resolution_service = ResolutionService(pending_resolution_repo)
     settings_service = SettingsService(user_repo)
     admin_service = AdminService(user_repo, signal_repo, settings.admin_user_ids)
     return AppContext(
         user_service=user_service,
         signal_service=signal_service,
+        resolution_service=resolution_service,
         settings_service=settings_service,
         admin_service=admin_service,
     )

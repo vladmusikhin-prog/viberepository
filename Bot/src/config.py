@@ -71,6 +71,10 @@ class Settings:
     polymarket_backfill_age_sec: int
     polymarket_backfill_limit: int
     polymarket_backfill_max_pages: int
+    polymarket_resolution_enabled: bool
+    polymarket_resolution_poll_interval_sec: int
+    polymarket_resolution_batch_size: int
+    polymarket_gamma_api_base: str
     admin_user_ids: tuple[int, ...]
     persistence_mode: str  # memory | sqlite
     sqlite_db_path: str
@@ -101,6 +105,19 @@ def load_settings() -> Settings:
         polymarket_backfill_age_sec=int(os.getenv("POLYMARKET_BACKFILL_AGE_SEC", str(24 * 3600))),
         polymarket_backfill_limit=int(os.getenv("POLYMARKET_BACKFILL_LIMIT", "200")),
         polymarket_backfill_max_pages=int(os.getenv("POLYMARKET_BACKFILL_MAX_PAGES", "8")),
+        polymarket_resolution_enabled=(
+            os.getenv("POLYMARKET_RESOLUTION_ENABLED", "true").strip().lower()
+            in ("1", "true", "yes", "y", "on")
+        ),
+        polymarket_resolution_poll_interval_sec=int(
+            os.getenv("POLYMARKET_RESOLUTION_POLL_INTERVAL_SEC", "120")
+        ),
+        polymarket_resolution_batch_size=int(
+            os.getenv("POLYMARKET_RESOLUTION_BATCH_SIZE", "25")
+        ),
+        polymarket_gamma_api_base=os.getenv(
+            "POLYMARKET_GAMMA_API_BASE", "https://gamma-api.polymarket.com"
+        ).rstrip("/"),
         admin_user_ids=_parse_admin_user_ids(os.getenv("ADMIN_USER_IDS", "")),
         persistence_mode=os.getenv("PERSISTENCE_MODE", "sqlite").strip().lower(),
         sqlite_db_path=os.getenv(

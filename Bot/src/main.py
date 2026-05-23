@@ -13,6 +13,7 @@ from src.handlers.common import build_context
 from src.logging_setup import configure_logging
 from src.services.keyboards import start_keyboard
 from src.single_instance import SingleInstanceLock
+from src.workers.resolution_worker import ResolutionWorker
 from src.workers.signal_worker import SignalWorker
 
 
@@ -51,12 +52,26 @@ async def main() -> None:
                 http_session=http_session,
             )
             worker_task = asyncio.create_task(worker.run())
+            resolution_task = None
+            if settings.polymarket_resolution_enabled:
+                resolution_worker = ResolutionWorker(
+                    bot=bot,
+                    context=context,
+                    settings=settings,
+                    http_session=http_session,
+                    resolution_service=context.resolution_service,
+                )
+                resolution_task = asyncio.create_task(resolution_worker.run())
             try:
                 await dp.start_polling(bot)
             finally:
                 worker_task.cancel()
                 with suppress(asyncio.CancelledError):
                     await worker_task
+                if resolution_task is not None:
+                    resolution_task.cancel()
+                    with suppress(asyncio.CancelledError):
+                        await resolution_task
 
     _start_cta_count = sum(len(row) for row in start_keyboard().inline_keyboard)
     if _start_cta_count != 1:

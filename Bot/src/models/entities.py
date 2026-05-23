@@ -27,3 +27,21 @@ class Signal:
     timestamp_utc: datetime
     is_test: bool = False
     delivered_to_user_id: Optional[int] = None
+
+
+@dataclass
+class TrackedMarket:
+    """Whale placement we alerted on; pending resolution notification."""
+
+    condition_id: str
+    slug: str
+    title: str
+    category: str
+    trade_side: str
+    outcome: str
+    price: float
+    size_usd: float
+    placement_signal_id: str
+    trade_timestamp: int
+    created_at: datetime = field(default_factory=utc_now)
+    resolved_at: Optional[datetime] = None

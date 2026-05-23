@@ -133,36 +133,13 @@ class SignalWorker:
                     continue
 
                 for user in eligible:
-                    signal_id, text, _invite_url = self.context.signal_service.build_polymarket_trade_alert(
-                        trade,
-                        category,
-                        user.telegram_user_id,
+                    sent = await self._deliver_trade_alert(
+                        trade=trade,
+                        category=category,
+                        user=user,
                     )
-                    if self.context.signal_service.is_signal_delivered(
-                        signal_id,
-                        user.telegram_user_id,
-                    ):
-                        continue
-
-                    try:
-                        from src.services.keyboards import signal_keyboard
-
-                        await self.bot.send_message(
-                            chat_id=user.telegram_user_id,
-                            text=text,
-                            reply_markup=signal_keyboard(),
-                        )
-                        delivered = self.context.signal_service.mark_signal_delivered(
-                            signal_id,
-                            user.telegram_user_id,
-                        )
-                        if delivered:
-                            signals_sent_total += 1
-                    except Exception:  # noqa: BLE001
-                        logger.exception(
-                            "Failed to deliver Polymarket backfill signal",
-                            extra={"user_id": user.telegram_user_id, "tx": tx[:18]},
-                        )
+                    if sent:
+                        signals_sent_total += 1
 
             # If the oldest trade on this page is already older than cutoff,
             # next pages will only be older (API expected sorted by recency).
@@ -224,30 +201,44 @@ class SignalWorker:
                 continue
 
             for user in eligible:
-                signal_id, text, _invite_url = self.context.signal_service.build_polymarket_trade_alert(
+                await self._deliver_trade_alert(
+                    trade=trade,
+                    category=category,
+                    user=user,
+                )
+
+    async def _deliver_trade_alert(self, *, trade: dict, category: str, user) -> bool:
+        signal_id, text, _invite_url = self.context.signal_service.build_polymarket_trade_alert(
+            trade,
+            category,
+            user.telegram_user_id,
+        )
+        if self.context.signal_service.is_signal_delivered(signal_id, user.telegram_user_id):
+            return False
+
+        tx = str(trade.get("transactionHash") or "")
+        try:
+            from src.services.keyboards import signal_keyboard
+
+            await self.bot.send_message(
+                chat_id=user.telegram_user_id,
+                text=text,
+                reply_markup=signal_keyboard(),
+            )
+            delivered = self.context.signal_service.mark_signal_delivered(
+                signal_id,
+                user.telegram_user_id,
+            )
+            if delivered:
+                self.context.resolution_service.track_whale_trade(
                     trade,
                     category,
-                    user.telegram_user_id,
-                )
-                if self.context.signal_service.is_signal_delivered(
                     signal_id,
-                    user.telegram_user_id,
-                ):
-                    continue
-                try:
-                    from src.services.keyboards import signal_keyboard
-
-                    await self.bot.send_message(
-                        chat_id=user.telegram_user_id,
-                        text=text,
-                        reply_markup=signal_keyboard(),
-                    )
-                    self.context.signal_service.mark_signal_delivered(
-                        signal_id,
-                        user.telegram_user_id,
-                    )
-                except Exception:  # noqa: BLE001
-                    logger.exception(
-                        "Failed to deliver Polymarket signal",
-                        extra={"user_id": user.telegram_user_id, "tx": tx[:18]},
-                    )
+                )
+            return delivered
+        except Exception:  # noqa: BLE001
+            logger.exception(
+                "Failed to deliver Polymarket signal",
+                extra={"user_id": user.telegram_user_id, "tx": tx[:18]},
+            )
+            return False
