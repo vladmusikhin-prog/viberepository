@@ -11,6 +11,15 @@ def test_classify_sports_nba() -> None:
     assert classify_polymarket_trade(t) == "Sports"
 
 
+def test_classify_sports_football_win_on_date() -> None:
+    t = {
+        "title": "Will Atalanta BC win on 2026-05-24?",
+        "slug": "will-atalanta-bc-win-on-2026-05-24",
+        "eventSlug": "sea-atalanta-match",
+    }
+    assert classify_polymarket_trade(t) == "Sports"
+
+
 def test_classify_politics_default() -> None:
     t = {
         "title": "Will the next Prime Minister of Hungary be Péter Magyar?",

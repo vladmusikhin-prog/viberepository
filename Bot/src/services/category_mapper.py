@@ -1,8 +1,12 @@
 from __future__ import annotations
 
+import re
 from typing import Any, Dict, Literal
 
 ProductCategory = Literal["Politics", "Crypto", "Sports"]
+
+# Polymarket sports match markets often use "Will X win on YYYY-MM-DD?"
+_SPORTS_WIN_ON_DATE = re.compile(r" win on 20\d{2}-\d{2}-\d{2}")
 
 _CRYPTO = (
     "btc",
@@ -62,6 +66,8 @@ def classify_polymarket_trade(trade: Dict[str, Any]) -> ProductCategory:
     blob = f"{title} {slug} {event}".lower()
     if any(k in blob for k in _CRYPTO):
         return "Crypto"
+    if _SPORTS_WIN_ON_DATE.search(blob):
+        return "Sports"
     if any(k in blob for k in _SPORTS):
         return "Sports"
     return "Politics"
