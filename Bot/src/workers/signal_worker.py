@@ -67,10 +67,15 @@ class SignalWorker:
         except (TypeError, ValueError):
             return 0.0
 
-    def _is_alertable_price(self, price: float) -> bool:
+    def _max_alert_price(self, category: str) -> float:
+        if category == "Crypto":
+            return self.settings.alert_max_price_crypto
+        return self.settings.alert_max_price
+
+    def _is_alertable_price(self, price: float, category: str) -> bool:
         return (
             price > self.MIN_ALERT_PRICE_EXCLUSIVE
-            and price <= self.settings.alert_max_price
+            and price <= self._max_alert_price(category)
         )
 
     async def _backfill_polymarket_once(self) -> None:
@@ -116,12 +121,11 @@ class SignalWorker:
                 if not ts or ts < cut_ts:
                     continue
 
+                category = classify_polymarket_trade(trade)
                 price = self._trade_price(trade)
-                if not self._is_alertable_price(price):
+                if not self._is_alertable_price(price, category):
                     continue
                 considered_trades_total += 1
-
-                category = classify_polymarket_trade(trade)
 
                 eligible = [
                     u
@@ -185,11 +189,10 @@ class SignalWorker:
             if ts and wall - ts > max_age:
                 continue
 
-            price = self._trade_price(trade)
-            if not self._is_alertable_price(price):
-                continue
-
             category = classify_polymarket_trade(trade)
+            price = self._trade_price(trade)
+            if not self._is_alertable_price(price, category):
+                continue
 
             eligible = [
                 u

@@ -60,6 +60,7 @@ class Settings:
     whale_threshold_usd: int
     signal_poll_interval_sec: int
     alert_max_price: float
+    alert_max_price_crypto: float
     log_level: str
     # Polymarket Data API (real signals)
     signal_source: str  # polymarket | demo
@@ -94,6 +95,7 @@ def load_settings() -> Settings:
         whale_threshold_usd=int(os.getenv("WHALE_THRESHOLD_USD", "100000")),
         signal_poll_interval_sec=int(os.getenv("SIGNAL_POLL_INTERVAL_SEC", "30")),
         alert_max_price=float(os.getenv("ALERT_MAX_PRICE", "0.95")),
+        alert_max_price_crypto=float(os.getenv("ALERT_MAX_PRICE_CRYPTO", "0.999")),
         log_level=os.getenv("LOG_LEVEL", "INFO"),
         signal_source=_normalize_signal_source(os.getenv("SIGNAL_SOURCE", "polymarket")),
         polymarket_data_api_base=os.getenv(
