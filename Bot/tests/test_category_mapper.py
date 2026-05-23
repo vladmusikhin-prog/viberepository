@@ -29,6 +29,24 @@ def test_classify_politics_default() -> None:
     assert classify_polymarket_trade(t) == "Politics"
 
 
+def test_classify_geopolitics_ceasefire() -> None:
+    t = {
+        "title": "Will there be a ceasefire in Ukraine before July 2026?",
+        "slug": "ukraine-ceasefire",
+        "eventSlug": "ukraine-conflict",
+    }
+    assert classify_polymarket_trade(t) == "Geopolitics"
+
+
+def test_classify_economics_fed() -> None:
+    t = {
+        "title": "Will the Fed cut rates in June 2026?",
+        "slug": "fed-rate-cut-june",
+        "eventSlug": "fed-2026",
+    }
+    assert classify_polymarket_trade(t) == "Economics"
+
+
 def test_seen_trade_store_bounded() -> None:
     from src.repositories.seen_trades import SeenTradeStore
 

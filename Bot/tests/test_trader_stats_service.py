@@ -58,7 +58,7 @@ def test_format_trader_stats_block_zero_zero() -> None:
 
 
 def test_build_alert_includes_trader_stats() -> None:
-    service = SignalService(UserRepository(), SignalRepository(), 100_000, 20_000, "bot", 100)
+    service = SignalService(UserRepository(), SignalRepository(), 100_000, 20_000, 75_000, "bot", 100)
     stats = TraderStats(
         display_name="VPenguin (Pastel-Push)",
         wins=3,

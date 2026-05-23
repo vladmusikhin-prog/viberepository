@@ -8,12 +8,15 @@ from src.workers.signal_worker import SignalWorker
 class _PriceSettings:
     whale_threshold_usd: int = 100_000
     whale_threshold_crypto_usd: int = 20_000
+    whale_threshold_economics_usd: int = 75_000
     alert_max_price: float = 0.95
     alert_max_price_crypto: float = 0.999
 
     def whale_threshold_for_category(self, category: str) -> int:
         if category == "Crypto":
             return self.whale_threshold_crypto_usd
+        if category == "Economics":
+            return self.whale_threshold_economics_usd
         return self.whale_threshold_usd
 
 
@@ -51,3 +54,5 @@ def test_meets_whale_threshold_by_category() -> None:
     assert worker._meets_whale_threshold(crypto_trade, "Crypto") is True
     assert worker._meets_whale_threshold(sports_trade, "Sports") is False
     assert worker._meets_whale_threshold({"size": 100_000}, "Sports") is True
+    assert worker._meets_whale_threshold({"size": 80_000}, "Economics") is True
+    assert worker._meets_whale_threshold({"size": 50_000}, "Economics") is False

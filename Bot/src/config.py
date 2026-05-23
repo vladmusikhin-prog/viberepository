@@ -59,6 +59,7 @@ class Settings:
     bot_username: str
     whale_threshold_usd: int
     whale_threshold_crypto_usd: int
+    whale_threshold_economics_usd: int
     signal_poll_interval_sec: int
     alert_max_price: float
     alert_max_price_crypto: float
@@ -87,10 +88,16 @@ class Settings:
     def whale_threshold_for_category(self, category: str) -> int:
         if category == "Crypto":
             return self.whale_threshold_crypto_usd
+        if category == "Economics":
+            return self.whale_threshold_economics_usd
         return self.whale_threshold_usd
 
     def api_whale_fetch_threshold_usd(self) -> int:
-        return min(self.whale_threshold_usd, self.whale_threshold_crypto_usd)
+        return min(
+            self.whale_threshold_usd,
+            self.whale_threshold_crypto_usd,
+            self.whale_threshold_economics_usd,
+        )
 
 
 def load_settings() -> Settings:
@@ -106,6 +113,7 @@ def load_settings() -> Settings:
         bot_username=username,
         whale_threshold_usd=int(os.getenv("WHALE_THRESHOLD_USD", "100000")),
         whale_threshold_crypto_usd=int(os.getenv("WHALE_THRESHOLD_CRYPTO", "20000")),
+        whale_threshold_economics_usd=int(os.getenv("WHALE_THRESHOLD_ECONOMICS", "75000")),
         signal_poll_interval_sec=int(os.getenv("SIGNAL_POLL_INTERVAL_SEC", "30")),
         alert_max_price=float(os.getenv("ALERT_MAX_PRICE", "0.95")),
         alert_max_price_crypto=float(os.getenv("ALERT_MAX_PRICE_CRYPTO", "0.999")),

@@ -42,6 +42,7 @@ def build_context(settings: Settings) -> AppContext:
         signal_repo=signal_repo,
         whale_threshold_usd=settings.whale_threshold_usd,
         whale_threshold_crypto_usd=settings.whale_threshold_crypto_usd,
+        whale_threshold_economics_usd=settings.whale_threshold_economics_usd,
         bot_username=settings.bot_username,
         trader_stats_positions_limit=settings.trader_stats_positions_limit,
     )

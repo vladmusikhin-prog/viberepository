@@ -46,6 +46,22 @@ _ACTIVATION_EXAMPLES: dict[str, dict[str, str | float]] = {
         "time": "18:20",
         "category": "Sports",
     },
+    "Geopolitics": {
+        "market": "Will there be a ceasefire in Ukraine before July 2026?",
+        "side": "BUY Yes",
+        "size_usd": 186_000,
+        "price": 0.34,
+        "time": "11:15",
+        "category": "Geopolitics",
+    },
+    "Economics": {
+        "market": "Will the Fed cut rates in June 2026?",
+        "side": "BUY Yes",
+        "size_usd": 124_000,
+        "price": 0.58,
+        "time": "15:40",
+        "category": "Economics",
+    },
     "All": {
         "market": "Will Bitcoin reach $150k in 2026?",
         "side": "BUY Yes",

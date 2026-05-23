@@ -22,3 +22,17 @@ def test_activation_example_category_crypto_uses_lower_threshold() -> None:
     assert "Bitcoin" in text
     assert ">= $20k" in text
     assert "от $20k+" in text
+
+
+def test_activation_example_category_geopolitics() -> None:
+    text = format_activation_example_text(category="Geopolitics", whale_threshold_usd=100_000)
+    assert "ceasefire" in text
+    assert "Geopolitics" in text
+    assert ">= $100k" in text
+
+
+def test_activation_example_category_economics() -> None:
+    text = format_activation_example_text(category="Economics", whale_threshold_usd=75_000)
+    assert "Fed cut rates" in text
+    assert "Economics" in text
+    assert ">= $75k" in text

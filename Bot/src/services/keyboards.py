@@ -33,7 +33,11 @@ def categories_keyboard() -> InlineKeyboardMarkup:
         inline_keyboard=[
             [
                 InlineKeyboardButton(text="🏛 Politics", callback_data="category:Politics"),
+                InlineKeyboardButton(text="🌍 Geopolitics", callback_data="category:Geopolitics"),
+            ],
+            [
                 InlineKeyboardButton(text="₿ Crypto", callback_data="category:Crypto"),
+                InlineKeyboardButton(text="📊 Economics", callback_data="category:Economics"),
             ],
             [
                 InlineKeyboardButton(text="🏅 Sports", callback_data="category:Sports"),
