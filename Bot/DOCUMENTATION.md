@@ -83,7 +83,7 @@ Bot/
 | `SQLITE_DB_PATH` | Нет | Путь к SQLite базе (например `./data/bot.sqlite3`) |
 | `LOG_LEVEL` | Нет (`INFO`) | Уровень логирования |
 | `ANALYTICS_ENABLED` | Нет (`true`) | Отправка session-отчётов о действиях пользователей в Telegram-группу |
-| `ANALYTICS_CHAT_ID` | Нет (пусто) | ID группы для логов (отрицательное число). Пусто = аналитика отключена |
+| `ANALYTICS_CHAT_ID` | Нет (в `.env.example`: `-1003979556527` для группы **Sonar Whale Logs**) | ID группы для логов. Пусто = аналитика отключена |
 | `ANALYTICS_SESSION_TIMEOUT_SEC` | Нет (`180`) | Пауза без действий (сек), после которой сессия закрывается и отчёт уходит в группу |
 
 Загрузка: `src/config.py` сначала читает `Bot/.env`, затем стандартный `load_dotenv()` (cwd).
@@ -101,7 +101,7 @@ Bot/
 
 1. Создать группу, добавить бота (достаточно права писать сообщения).
 2. Узнать `chat_id` группы (например через `getUpdates` после сообщения в группе или @RawDataBot).
-3. Задать `ANALYTICS_CHAT_ID` в Railway / `.env` и перезапустить бота.
+3. Задать `ANALYTICS_CHAT_ID=-1003979556527` в Railway Variables (группа **Sonar Whale Logs**) и перезапустить бота.
 
 Модули: `src/services/interaction_log_service.py`, `src/middleware/interaction_logging.py`.
 
