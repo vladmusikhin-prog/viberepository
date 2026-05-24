@@ -82,8 +82,28 @@ Bot/
 | `PERSISTENCE_MODE` | Нет (`sqlite`) | `sqlite` — подписки и дедуп переживают рестарт; `memory` — состояние сбрасывается |
 | `SQLITE_DB_PATH` | Нет | Путь к SQLite базе (например `./data/bot.sqlite3`) |
 | `LOG_LEVEL` | Нет (`INFO`) | Уровень логирования |
+| `ANALYTICS_ENABLED` | Нет (`true`) | Отправка session-отчётов о действиях пользователей в Telegram-группу |
+| `ANALYTICS_CHAT_ID` | Нет (пусто) | ID группы для логов (отрицательное число). Пусто = аналитика отключена |
+| `ANALYTICS_SESSION_TIMEOUT_SEC` | Нет (`180`) | Пауза без действий (сек), после которой сессия закрывается и отчёт уходит в группу |
 
 Загрузка: `src/config.py` сначала читает `Bot/.env`, затем стандартный `load_dotenv()` (cwd).
+
+---
+
+## 4.1. Interaction logs (аналитика в Telegram-группе)
+
+При заданном `ANALYTICS_CHAT_ID` бот собирает **сессии** пользователей в private-чате и после **3 мин** неактivity (настраивается через `ANALYTICS_SESSION_TIMEOUT_SEC`) отправляет в группу сводный отчёт:
+
+- команды (`/start`, `/settings`, …) и inline-кнопки (активация, категория, share, деактивация);
+- исходящие **whale**- и **resolution**-алерты, доставленные пользователю.
+
+**Настройка группы:**
+
+1. Создать группу, добавить бота (достаточно права писать сообщения).
+2. Узнать `chat_id` группы (например через `getUpdates` после сообщения в группе или @RawDataBot).
+3. Задать `ANALYTICS_CHAT_ID` в Railway / `.env` и перезапустить бота.
+
+Модули: `src/services/interaction_log_service.py`, `src/middleware/interaction_logging.py`.
 
 ---
 

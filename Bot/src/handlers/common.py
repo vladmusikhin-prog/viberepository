@@ -1,6 +1,10 @@
 from dataclasses import dataclass
 
+from aiogram import Bot
+
+from src.config import Settings
 from src.services.admin_service import AdminService
+from src.services.interaction_log_service import InteractionLogService
 from src.services.resolution_service import ResolutionService
 from src.services.settings_service import SettingsService
 from src.services.signal_service import SignalService
@@ -13,7 +17,6 @@ from src.repositories.pending_resolution_repo import (
     SQLitePendingResolutionRepository,
 )
 from src.repositories.sqlite_repo import SQLiteSignalRepository, SQLiteUserRepository
-from src.config import Settings
 
 
 @dataclass
@@ -24,9 +27,10 @@ class AppContext:
     resolution_service: ResolutionService
     settings_service: SettingsService
     admin_service: AdminService
+    interaction_log_service: InteractionLogService
 
 
-def build_context(settings: Settings) -> AppContext:
+def build_context(settings: Settings, bot: Bot) -> AppContext:
     if settings.persistence_mode == "sqlite":
         user_repo = SQLiteUserRepository(settings.sqlite_db_path)
         signal_repo = SQLiteSignalRepository(settings.sqlite_db_path)
@@ -55,6 +59,11 @@ def build_context(settings: Settings) -> AppContext:
     resolution_service = ResolutionService(pending_resolution_repo)
     settings_service = SettingsService(user_repo)
     admin_service = AdminService(user_repo, signal_repo, settings.admin_user_ids)
+    interaction_log_service = InteractionLogService(
+        bot=bot,
+        settings=settings,
+        user_repo=user_repo,
+    )
     return AppContext(
         user_service=user_service,
         signal_service=signal_service,
@@ -62,4 +71,5 @@ def build_context(settings: Settings) -> AppContext:
         resolution_service=resolution_service,
         settings_service=settings_service,
         admin_service=admin_service,
+        interaction_log_service=interaction_log_service,
     )

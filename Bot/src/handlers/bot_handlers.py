@@ -72,6 +72,16 @@ def register_handlers(context: AppContext) -> Router:
         text = context.settings_service.render_settings(message.from_user.id)
         await message.answer(text, reply_markup=settings_keyboard(user.is_live_enabled))
 
+    @router.message(Command("chatid"))
+    async def cmd_chatid(message: Message) -> None:
+        chat = message.chat
+        title = chat.title or "—"
+        await message.answer(
+            f"🆔 Chat ID: `{chat.id}`\n"
+            f"📂 Type: {chat.type}\n"
+            f"📝 Title: {title}"
+        )
+
     @router.message(Command("admin_stats"))
     async def cmd_admin_stats(message: Message) -> None:
         if not message.from_user:

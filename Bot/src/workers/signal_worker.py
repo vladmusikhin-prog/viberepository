@@ -258,6 +258,12 @@ class SignalWorker:
                     category,
                     signal_id,
                 )
+                await self.context.interaction_log_service.record_whale_alert_delivered(
+                    user.telegram_user_id,
+                    category=category,
+                    market_title=str(trade.get("title") or ""),
+                    size_usd=float(trade.get("size") or 0),
+                )
             return delivered
         except Exception:  # noqa: BLE001
             logger.exception(

@@ -63,6 +63,7 @@ class ResolutionWorker:
             if resolution is None:
                 continue
 
+            assessment = self.resolution_service.assess_whale_outcome(tracked, resolution)
             signal_id, text = self.resolution_service.build_resolution_alert(
                 tracked,
                 resolution,
@@ -71,6 +72,8 @@ class ResolutionWorker:
                 signal_id=signal_id,
                 text=text,
                 category=tracked.category,
+                market_title=tracked.title,
+                outcome=assessment.result,
             )
             self.resolution_service.pending_repo.mark_resolved(tracked.condition_id)
             logger.info(
@@ -85,6 +88,8 @@ class ResolutionWorker:
         signal_id: str,
         text: str,
         category: str,
+        market_title: str,
+        outcome: str,
     ) -> None:
         eligible = [
             u
@@ -108,6 +113,11 @@ class ResolutionWorker:
                 self.context.signal_service.mark_signal_delivered(
                     signal_id,
                     user.telegram_user_id,
+                )
+                await self.context.interaction_log_service.record_resolution_alert_delivered(
+                    user.telegram_user_id,
+                    outcome=outcome,
+                    market_title=market_title,
                 )
             except Exception:  # noqa: BLE001
                 logger.exception(

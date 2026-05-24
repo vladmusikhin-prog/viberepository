@@ -5,6 +5,7 @@ import os
 import urllib.error
 import urllib.request
 from pathlib import Path
+from typing import Optional
 
 from dotenv import load_dotenv
 
@@ -36,6 +37,23 @@ def _parse_admin_user_ids(raw: str) -> tuple[int, ...]:
         except ValueError:
             logger.warning("Invalid ADMIN_USER_IDS value ignored: %r", p)
     return tuple(sorted(set(values)))
+
+
+def _parse_bool(raw: str, *, default: bool) -> bool:
+    if raw is None or not str(raw).strip():
+        return default
+    return str(raw).strip().lower() in ("1", "true", "yes", "y", "on")
+
+
+def _parse_optional_chat_id(raw: str) -> Optional[int]:
+    cleaned = (raw or "").strip()
+    if not cleaned:
+        return None
+    try:
+        return int(cleaned)
+    except ValueError:
+        logger.warning("Invalid ANALYTICS_CHAT_ID ignored: %r", raw)
+        return None
 
 
 def _resolve_bot_username(token: str, env_username: str) -> str:
@@ -84,6 +102,9 @@ class Settings:
     admin_user_ids: tuple[int, ...]
     persistence_mode: str  # memory | sqlite
     sqlite_db_path: str
+    analytics_enabled: bool
+    analytics_chat_id: Optional[int]
+    analytics_session_timeout_sec: int
 
     def whale_threshold_for_category(self, category: str) -> int:
         if category == "Crypto":
@@ -154,4 +175,7 @@ def load_settings() -> Settings:
             # relative to Bot/ directory by default
             str(Path(__file__).resolve().parent.parent / "data" / "bot.sqlite3"),
         ),
+        analytics_enabled=_parse_bool(os.getenv("ANALYTICS_ENABLED", "true"), default=True),
+        analytics_chat_id=_parse_optional_chat_id(os.getenv("ANALYTICS_CHAT_ID", "")),
+        analytics_session_timeout_sec=int(os.getenv("ANALYTICS_SESSION_TIMEOUT_SEC", "180")),
     )
