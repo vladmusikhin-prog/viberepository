@@ -13,6 +13,12 @@ ALL_PRODUCT_CATEGORIES: Tuple[ProductCategory, ...] = (
     "Economics",
 )
 
+ONBOARDING_CATEGORIES: frozenset[str] = frozenset({"All", *ALL_PRODUCT_CATEGORIES})
+
+
+def is_valid_onboarding_category(category: str) -> bool:
+    return category in ONBOARDING_CATEGORIES
+
 # Polymarket sports match markets often use "Will X win on YYYY-MM-DD?"
 _SPORTS_WIN_ON_DATE = re.compile(r" win on 20\d{2}-\d{2}-\d{2}")
 

@@ -1,4 +1,4 @@
-from src.services.category_mapper import classify_polymarket_trade
+from src.services.category_mapper import classify_polymarket_trade, is_valid_onboarding_category
 
 
 def test_classify_crypto_from_title() -> None:
@@ -57,3 +57,9 @@ def test_seen_trade_store_bounded() -> None:
     assert s.try_consume("c") is True
     assert s.try_consume("d") is True
     assert s.try_consume("a") is True
+
+
+def test_is_valid_onboarding_category() -> None:
+    assert is_valid_onboarding_category("All") is True
+    assert is_valid_onboarding_category("Politics") is True
+    assert is_valid_onboarding_category("Hack") is False

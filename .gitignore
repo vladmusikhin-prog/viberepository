@@ -12,3 +12,4 @@ venv/
 .idea/
 .vscode/
 Bot/data/
+.pytest_cache/

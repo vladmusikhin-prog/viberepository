@@ -8,6 +8,7 @@ from aiogram.types import CallbackQuery, Message
 
 from src.handlers.common import AppContext
 from src.handlers.start_helpers import is_invite_deep_link
+from src.services.category_mapper import is_valid_onboarding_category
 from src.services.keyboards import (
     activation_success_keyboard,
     categories_keyboard,
@@ -109,6 +110,8 @@ def register_handlers(context: AppContext) -> Router:
             return
         await callback.answer()
         category = callback.data.split(":", maxsplit=1)[1]
+        if not is_valid_onboarding_category(category):
+            return
         context.user_service.activate_categories(callback.from_user.id, category)
         activation_text = format_activation_example_text(
             category=category,

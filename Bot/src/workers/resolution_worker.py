@@ -68,19 +68,19 @@ class ResolutionWorker:
                 tracked,
                 resolution,
             )
-            await self._deliver_resolution(
+            if await self._deliver_resolution(
                 signal_id=signal_id,
                 text=text,
                 category=tracked.category,
                 market_title=tracked.title,
                 outcome=assessment.result,
-            )
-            self.resolution_service.pending_repo.mark_resolved(tracked.condition_id)
-            logger.info(
-                "Resolution alert processed condition_id=%s market=%s",
-                tracked.condition_id[:12],
-                tracked.title[:48],
-            )
+            ):
+                self.resolution_service.pending_repo.mark_resolved(tracked.condition_id)
+                logger.info(
+                    "Resolution alert processed condition_id=%s market=%s",
+                    tracked.condition_id[:12],
+                    tracked.title[:48],
+                )
 
     async def _deliver_resolution(
         self,
@@ -90,17 +90,18 @@ class ResolutionWorker:
         category: str,
         market_title: str,
         outcome: str,
-    ) -> None:
+    ) -> bool:
         eligible = [
             u
             for u in self.context.user_service.user_repo.all_users()
             if u.is_live_enabled and (not u.categories or category in u.categories)
         ]
         if not eligible:
-            return
+            return True
 
         from src.services.keyboards import signal_keyboard
 
+        all_delivered = True
         for user in eligible:
             if self.context.signal_service.is_signal_delivered(signal_id, user.telegram_user_id):
                 continue
@@ -110,17 +111,21 @@ class ResolutionWorker:
                     text=text,
                     reply_markup=signal_keyboard(),
                 )
-                self.context.signal_service.mark_signal_delivered(
+                delivered = self.context.signal_service.mark_signal_delivered(
                     signal_id,
                     user.telegram_user_id,
                 )
-                await self.context.interaction_log_service.record_resolution_alert_delivered(
-                    user.telegram_user_id,
-                    outcome=outcome,
-                    market_title=market_title,
-                )
+                if delivered:
+                    await self.context.interaction_log_service.record_resolution_alert_delivered(
+                        user.telegram_user_id,
+                        outcome=outcome,
+                        market_title=market_title,
+                    )
+                all_delivered = all_delivered and delivered
             except Exception:  # noqa: BLE001
                 logger.exception(
                     "Failed to deliver resolution alert",
                     extra={"user_id": user.telegram_user_id, "signal_id": signal_id[:24]},
                 )
+                all_delivered = False
+        return all_delivered
