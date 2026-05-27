@@ -144,9 +144,9 @@ chmod +x run.sh
 | **Root Directory** | `Bot` |
 | **Start Command** (если спрашивают) | `python -m src.main` |
 
-**Variables:** минимум `BOT_TOKEN`; остальное — по `.env.example`.
+**Variables:** минимум `BOT_TOKEN`; для follow-up по исходам рынков — `POLYMARKET_RESOLUTION_ENABLED=true` (по умолчанию в `.env.example`); при SQLite — `PERSISTENCE_MODE=sqlite` и volume на `Bot/data/bot.sqlite3`. Остальное — по `.env.example`.
 
-Конфиг: `Bot/railpack.json` (команда старта для Railpack) и `Bot/railway.toml`. В UI можно дублировать **Start Command:** `python -m src.main`. После push — **Redeploy**.
+Конфиг: `Bot/railpack.json` (команда старта для Railpack) и `Bot/railway.toml`. В UI можно дублировать **Start Command:** `python -m src.main`. После push в `main` — **Redeploy** и проверка `/admin_stats` (строки `Resolution pending` / `Resolution resolved`).
 
 Не держи бота **одновременно** на Mac и Railway с одним `BOT_TOKEN`.
 
@@ -159,7 +159,7 @@ chmod +x run.sh
 - `/start` — приветствие и кнопка «Активировать»
 - `/help` — краткая подсказка
 - `/settings` — категории, статус live, блок «Твоя статистика», кнопки изменения категорий и выключения сигналов
-- `/admin_stats` — сводка метрик процесса (доступ только для `ADMIN_USER_IDS`)
+- `/admin_stats` — сводка метрик процесса: пользователи, доставки, **очередь resolution** (`pending` / `resolved`); доступ только для `ADMIN_USER_IDS`
 
 ### Callback-данные (основные)
 

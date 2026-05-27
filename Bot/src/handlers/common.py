@@ -58,7 +58,12 @@ def build_context(settings: Settings, bot: Bot) -> AppContext:
     )
     resolution_service = ResolutionService(pending_resolution_repo)
     settings_service = SettingsService(user_repo)
-    admin_service = AdminService(user_repo, signal_repo, settings.admin_user_ids)
+    admin_service = AdminService(
+        user_repo,
+        signal_repo,
+        pending_resolution_repo,
+        settings.admin_user_ids,
+    )
     interaction_log_service = InteractionLogService(
         bot=bot,
         settings=settings,

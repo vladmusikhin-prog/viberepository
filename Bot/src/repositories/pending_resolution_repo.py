@@ -39,6 +39,12 @@ class InMemoryPendingResolutionRepository:
             return
         tracked.resolved_at = utc_now()
 
+    def count_pending(self) -> int:
+        return sum(1 for m in self._markets.values() if m.resolved_at is None)
+
+    def count_resolved(self) -> int:
+        return sum(1 for m in self._markets.values() if m.resolved_at is not None)
+
 
 class SQLitePendingResolutionRepository:
     def __init__(self, db_path: str) -> None:
@@ -147,3 +153,17 @@ class SQLitePendingResolutionRepository:
                 (utc_now().isoformat(), condition_id),
             )
             conn.commit()
+
+    def count_pending(self) -> int:
+        with self._lock, self._connect() as conn:
+            row = conn.execute(
+                "SELECT COUNT(*) AS c FROM pending_resolutions WHERE resolved_at IS NULL"
+            ).fetchone()
+            return int(row["c"]) if row else 0
+
+    def count_resolved(self) -> int:
+        with self._lock, self._connect() as conn:
+            row = conn.execute(
+                "SELECT COUNT(*) AS c FROM pending_resolutions WHERE resolved_at IS NOT NULL"
+            ).fetchone()
+            return int(row["c"]) if row else 0

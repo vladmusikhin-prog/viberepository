@@ -3,10 +3,12 @@ class AdminService:
         self,
         user_repo,
         signal_repo,
+        pending_resolution_repo,
         admin_user_ids: tuple[int, ...],
     ) -> None:
         self.user_repo = user_repo
         self.signal_repo = signal_repo
+        self.pending_resolution_repo = pending_resolution_repo
         self._admins = set(admin_user_ids)
 
     def is_admin(self, user_id: int) -> bool:
@@ -19,11 +21,15 @@ class AdminService:
         users = self.user_repo.all_users()
         active = sum(1 for u in users if u.is_live_enabled)
         total_signals_counter = sum(u.signals_received for u in users)
+        pending_resolutions = self.pending_resolution_repo.count_pending()
+        resolved_resolutions = self.pending_resolution_repo.count_resolved()
         return (
             "🛠 Admin stats\n"
             f"👥 Total users: {len(users)}\n"
             f"🟢 Active subscriptions: {active}\n"
             f"📬 Delivered signals (guard): {self.signal_repo.delivered_count()}\n"
             f"🗂 Signal rows stored: {self.signal_repo.signal_count()}\n"
-            f"📥 Signals counter sum (N): {total_signals_counter}"
+            f"📥 Signals counter sum (N): {total_signals_counter}\n"
+            f"🏁 Resolution pending: {pending_resolutions}\n"
+            f"✅ Resolution resolved: {resolved_resolutions}"
         )
