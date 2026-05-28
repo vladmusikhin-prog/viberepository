@@ -36,6 +36,25 @@ def test_build_alert_uses_crypto_whale_threshold() -> None:
     assert "Crypto" in text
 
 
+def test_build_alert_crypto_price_three_decimals() -> None:
+    service = SignalService(UserRepository(), SignalRepository(), 100_000, 20_000, 75_000, "bot")
+    _signal_id, text, _url = service.build_polymarket_trade_alert(
+        {
+            "transactionHash": "0xabc2",
+            "title": "Will Bitcoin be between $76k and $78k?",
+            "side": "BUY",
+            "outcome": "No",
+            "size": 194_949,
+            "price": 0.999,
+            "timestamp": 1_700_000_000,
+        },
+        "Crypto",
+        inviter_telegram_user_id=1,
+    )
+    assert "Цена: 0.999" in text
+    assert "Цена: 1.00" not in text
+
+
 def test_build_alert_uses_economics_whale_threshold() -> None:
     service = SignalService(UserRepository(), SignalRepository(), 100_000, 20_000, 75_000, "bot")
     _signal_id, text, _url = service.build_polymarket_trade_alert(

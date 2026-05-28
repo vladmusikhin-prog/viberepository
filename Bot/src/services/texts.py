@@ -132,13 +132,14 @@ def format_alert_text(
     trader_stats_block: str | None = None,
 ) -> str:
     trader_section = f"\n{trader_stats_block}\n" if trader_stats_block else ""
+    price_label = _format_price_for_category(price, category)
     return f"""🐋 Whale Alert: крупное размещение
 
 🎯 Рынок: {market}
 🧭 Платформа: Polymarket
 📈 Сторона: {side}
 💵 Размер: ${size_usd:,.0f}
-💲 Цена: {price:.2f}
+💲 Цена: {price_label}
 🕒 Время: {timestamp_utc} UTC
 {trader_section}
 📏 Критерий whale: >= ${whale_threshold_usd / 1000:.0f}k
@@ -209,14 +210,22 @@ def format_resolution_text(
         else f"✅ Исход события: {winning_outcome or '—'}"
     )
     closed_line = f"🕒 Закрыто: {closed_time}\n" if closed_time else ""
+    price_label = _format_price_for_category(price, category)
     return f"""🏁 Итог события: результат ставки кита
 
 🎯 Рынок: {market}
 🧭 Платформа: Polymarket
 📈 Ставка кита: {whale_side}
 💵 Размер: ${size_usd:,.0f}
-💲 Цена входа: {price:.2f}
+💲 Цена входа: {price_label}
 
 {outcome_line}
 {closed_line}{_result_block(result, pnl_usd, note)}
 🏷 Категория: {category}"""
+
+
+def _format_price_for_category(price: float, category: str) -> str:
+    # Crypto markets often trade near 1.0; 3 decimals avoids displaying 0.999 as 1.00.
+    if category == "Crypto":
+        return f"{price:.3f}"
+    return f"{price:.2f}"
