@@ -1,3 +1,6 @@
+from src.build_info import FEATURE_TAG, get_build_id
+
+
 class AdminService:
     def __init__(
         self,
@@ -25,6 +28,7 @@ class AdminService:
         resolved_resolutions = self.pending_resolution_repo.count_resolved()
         return (
             "🛠 Admin stats\n"
+            f"📦 Build: {get_build_id()} ({FEATURE_TAG})\n"
             f"👥 Total users: {len(users)}\n"
             f"🟢 Active subscriptions: {active}\n"
             f"📬 Delivered signals (guard): {self.signal_repo.delivered_count()}\n"

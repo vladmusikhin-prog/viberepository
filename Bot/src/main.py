@@ -7,6 +7,7 @@ import aiohttp
 from aiogram import Bot, Dispatcher
 from aiogram.types import ErrorEvent
 
+from src.build_info import FEATURE_TAG, get_build_id
 from src.config import load_settings
 from src.handlers.bot_handlers import register_handlers
 from src.handlers.common import build_context
@@ -123,7 +124,9 @@ async def main() -> None:
         )
 
     logger.info(
-        "Bot started in polling mode (signal_source=%s)",
+        "Bot started build=%s feature=%s signal_source=%s",
+        get_build_id(),
+        FEATURE_TAG,
         settings.signal_source,
     )
     await _run_bot()

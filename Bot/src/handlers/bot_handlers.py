@@ -6,6 +6,7 @@ from aiogram import F, Router
 from aiogram.filters import Command, CommandObject, CommandStart
 from aiogram.types import CallbackQuery, Message
 
+from src.build_info import FEATURE_TAG, get_build_id
 from src.handlers.common import AppContext
 from src.handlers.start_helpers import is_invite_deep_link
 from src.services.category_mapper import ALL_PRODUCT_CATEGORIES
@@ -87,6 +88,14 @@ def register_handlers(context: AppContext) -> Router:
             f"🆔 Chat ID: `{chat.id}`\n"
             f"📂 Type: {chat.type}\n"
             f"📝 Title: {title}"
+        )
+
+    @router.message(Command("version"))
+    async def cmd_version(message: Message) -> None:
+        await message.answer(
+            f"📦 Bot build: `{get_build_id()}`\n"
+            f"🏷 Feature: {FEATURE_TAG}\n\n"
+            "Мультивыбор категорий: кнопки с ✅ и «Готово», без «All»."
         )
 
     @router.message(Command("admin_stats"))
