@@ -7,7 +7,15 @@ START_TEXT = """🐋 Whale Signals Bot
 
 Готов включить сигналы?"""
 
-CATEGORY_PROMPT_TEXT = "🎯 Выбери, что тебе сейчас важнее."
+CATEGORY_PROMPT_TEXT = (
+    "🎯 Выбери категории для whale-сигналов.\n"
+    "Можно несколько — например, Crypto + Economics.\n\n"
+    "Нажми категорию, чтобы включить или выключить, затем «Готово»."
+)
+
+
+def format_category_selection_text(selected_label: str) -> str:
+    return f"{CATEGORY_PROMPT_TEXT}\n\n✅ Выбрано: {selected_label}"
 
 INVITE_ALREADY_ACTIVE_TEXT = """🙌 Спасибо, что вы с нами!
 
@@ -73,8 +81,13 @@ _ACTIVATION_EXAMPLES: dict[str, dict[str, str | float]] = {
 }
 
 
-def format_activation_example_text(*, category: str, whale_threshold_usd: int) -> str:
-    sample = _ACTIVATION_EXAMPLES.get(category, _ACTIVATION_EXAMPLES["All"])
+def format_activation_example_text(
+    *,
+    category: str,
+    whale_threshold_usd: int,
+    categories_label: str | None = None,
+) -> str:
+    sample = _ACTIVATION_EXAMPLES.get(category, _ACTIVATION_EXAMPLES["Crypto"])
     alert = format_alert_text(
         market=str(sample["market"]),
         side=str(sample["side"]),
@@ -85,7 +98,8 @@ def format_activation_example_text(*, category: str, whale_threshold_usd: int) -
         category=str(sample["category"]),
     )
     threshold_k = whale_threshold_usd / 1000
-    return f"""{ACTIVATION_SUCCESS_TEXT}
+    categories_line = f"\n🏷 Категории: {categories_label}" if categories_label else ""
+    return f"""{ACTIVATION_SUCCESS_TEXT}{categories_line}
 
 📋 Пример: так будет выглядеть уведомление о крупной сделке
 
@@ -96,6 +110,21 @@ def format_activation_example_text(*, category: str, whale_threshold_usd: int) -
 🔎 Мы мониторим Polymarket 24/7. Как только появится whale-сделка от ${threshold_k:.0f}k+ в твоих категориях — сразу пришлём алерт сюда.
 
 🏁 После закрытия рынка придёт второе сообщение с итогом (выигрыш или проигрыш ставки кита)."""
+
+
+def format_activation_example_text_for_categories(
+    *,
+    categories: list[str],
+    whale_threshold_for_category,
+) -> str:
+    """Demo alert uses the strictest threshold among selected categories."""
+    primary = "Crypto" if "Crypto" in categories else categories[0]
+    threshold = max(whale_threshold_for_category(c) for c in categories)
+    return format_activation_example_text(
+        category=primary,
+        whale_threshold_usd=threshold,
+        categories_label=", ".join(categories),
+    )
 
 
 def format_trader_stats_block(

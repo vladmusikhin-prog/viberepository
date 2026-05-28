@@ -74,9 +74,16 @@ def _parse_callback(callback: CallbackQuery) -> Optional[ParsedInteraction]:
 
     if data == "activate":
         return user.telegram_user_id, "onboarding_activate", None, None, user
+    if data.startswith("cat_toggle:"):
+        parts = data.split(":", maxsplit=2)
+        detail = parts[1] if len(parts) > 1 else None
+        return user.telegram_user_id, "category_toggle", detail, None, user
+    if data.startswith("cat_confirm:"):
+        encoded = data.split(":", maxsplit=1)[1] if ":" in data else ""
+        return user.telegram_user_id, "categories_confirmed", encoded or None, None, user
     if data.startswith("category:"):
         category = data.split(":", maxsplit=1)[1]
-        return user.telegram_user_id, "category_selected", category, None, user
+        return user.telegram_user_id, "category_selected_legacy", category, None, user
     if data == "share_friend":
         return user.telegram_user_id, "share_friend", None, None, user
     if data == "disable_live":

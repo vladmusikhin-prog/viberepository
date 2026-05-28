@@ -166,7 +166,9 @@ chmod +x run.sh
 | `callback_data` | Действие |
 |-----------------|----------|
 | `activate` | Выбор категорий |
-| `category:<name>` | Сохранение категорий (`All` → все три) |
+| `cat_toggle:<Category>:<codes>` | Вкл/выкл категорию в мультивыборе (✅ на кнопке) |
+| `cat_confirm:<codes>` | Сохранить выбранные категории и включить live |
+| `category:<name>` | Legacy: открывает новый экран мультивыбора |
 | `test_signal`, `open_test_signal`, `go_live`, `how_it_works` | Устаревшие `callback_data`: короткий ответ пользователю (старые сообщения с прошлых версий бота) |
 | `disable_live` | Отключение live-флага у пользователя |
 

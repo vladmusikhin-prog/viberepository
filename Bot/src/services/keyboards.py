@@ -1,8 +1,47 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
+from src.services.category_selection import encode_selection
+
+_CATEGORY_BUTTONS: tuple[tuple[str, str, str], ...] = (
+    ("🏛 Politics", "Politics", "P"),
+    ("🌍 Geopolitics", "Geopolitics", "G"),
+    ("₿ Crypto", "Crypto", "C"),
+    ("📊 Economics", "Economics", "E"),
+    ("🏅 Sports", "Sports", "S"),
+)
+
 
 def _main_menu_button() -> InlineKeyboardButton:
     return InlineKeyboardButton(text="🏠 Главное меню", callback_data="main_menu")
+
+
+def _category_label(base: str, category: str, selected: set[str]) -> str:
+    if category in selected:
+        return f"✅ {base}"
+    return base
+
+
+def categories_keyboard(selected: set[str]) -> InlineKeyboardMarkup:
+    encoded = encode_selection(selected)
+    rows: list[list[InlineKeyboardButton]] = []
+    pair: list[InlineKeyboardButton] = []
+    for label, category, _code in _CATEGORY_BUTTONS:
+        pair.append(
+            InlineKeyboardButton(
+                text=_category_label(label, category, selected),
+                callback_data=f"cat_toggle:{category}:{encoded}",
+            )
+        )
+        if len(pair) == 2:
+            rows.append(pair)
+            pair = []
+    if pair:
+        rows.append(pair)
+    rows.append(
+        [InlineKeyboardButton(text="✅ Готово", callback_data=f"cat_confirm:{encoded}")]
+    )
+    rows.append([_main_menu_button()])
+    return InlineKeyboardMarkup(inline_keyboard=rows)
 
 
 def start_keyboard() -> InlineKeyboardMarkup:
@@ -16,7 +55,7 @@ def start_keyboard() -> InlineKeyboardMarkup:
 def main_menu_active_keyboard() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text="⚙️ Изменить категорию", callback_data="activate")],
+            [InlineKeyboardButton(text="⚙️ Изменить категории", callback_data="activate")],
             [InlineKeyboardButton(text="🔕 Деактивировать уведомления", callback_data="disable_live")],
         ]
     )
@@ -28,30 +67,10 @@ def main_menu_keyboard(is_live_enabled: bool) -> InlineKeyboardMarkup:
     return start_keyboard()
 
 
-def categories_keyboard() -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup(
-        inline_keyboard=[
-            [
-                InlineKeyboardButton(text="🏛 Politics", callback_data="category:Politics"),
-                InlineKeyboardButton(text="🌍 Geopolitics", callback_data="category:Geopolitics"),
-            ],
-            [
-                InlineKeyboardButton(text="₿ Crypto", callback_data="category:Crypto"),
-                InlineKeyboardButton(text="📊 Economics", callback_data="category:Economics"),
-            ],
-            [
-                InlineKeyboardButton(text="🏅 Sports", callback_data="category:Sports"),
-                InlineKeyboardButton(text="🌐 All", callback_data="category:All"),
-            ],
-            [_main_menu_button()],
-        ]
-    )
-
-
 def activation_success_keyboard() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text="⚙️ Изменить категорию", callback_data="activate")],
+            [InlineKeyboardButton(text="⚙️ Изменить категории", callback_data="activate")],
             [_main_menu_button()],
         ]
     )
@@ -70,7 +89,7 @@ def settings_keyboard(is_live_enabled: bool) -> InlineKeyboardMarkup:
     rows = []
     if is_live_enabled:
         rows.append(
-            [InlineKeyboardButton(text="⚙️ Изменить категорию", callback_data="activate")]
+            [InlineKeyboardButton(text="⚙️ Изменить категории", callback_data="activate")]
         )
         rows.append(
             [InlineKeyboardButton(text="🔕 Деактивировать уведомления", callback_data="disable_live")]
