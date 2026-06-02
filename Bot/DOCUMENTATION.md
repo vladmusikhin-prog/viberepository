@@ -10,7 +10,7 @@
 
 Telegram-бот доставляет **whale-style алерты** по шаблону из Product Card: онбординг, выбор категорий, живые сигналы из мониторинга, фидбек и инвайт по ссылке (отдельного «тестового» алерта по кнопке нет).
 
-**Режим `SIGNAL_SOURCE=polymarket` (по умолчанию):** опрос [Polymarket Data API](https://docs.polymarket.com/api-reference/core/get-trades-for-a-user-or-markets) `GET /trades` с `filterType=CASH` и `filterAmount=<WHALE_THRESHOLD_USD>`. Подбор категории пользователя (`Politics` / `Crypto` / `Sports`) — **эвристика по тексту** `title` + `slug` + `eventSlug` (не теги Gamma). Дедуп по `transactionHash`.
+**Режим `SIGNAL_SOURCE=polymarket` (по умолчанию):** опрос [Polymarket Data API](https://docs.polymarket.com/api-reference/core/get-trades-for-a-user-or-markets) `GET /trades` с `filterType=CASH` и `filterAmount=<WHALE_THRESHOLD_USD>`. Подбор категории пользователя (`Politics` / `Crypto` / `Sports`) — **эвристика по тексту** `title` + `slug` + `eventSlug` (не теги Gamma). Перед алертом — проверка рынка в [Gamma API](https://gamma-api.polymarket.com): не слать, если `closed` или не `acceptingOrders` (кэш ~5 мин). Дедуп по `transactionHash`.
 
 **Режим `SIGNAL_SOURCE=demo`:** фоновый worker **отключён** (нет периодических сигналов). Остаётся только онбординг и ручные команды; первый whale-alert пользователь получает уже из live-режима при `polymarket`.
 

@@ -89,6 +89,17 @@ class SignalWorker:
             and price <= self._max_alert_price(category)
         )
 
+    async def _passes_whale_trade_filters(self, trade: dict) -> bool:
+        category = classify_polymarket_trade(trade)
+        if not self._meets_whale_threshold(trade, category):
+            return False
+        if not self._is_alertable_price(self._trade_price(trade), category):
+            return False
+        return await self.context.market_status_service.is_trade_on_tradable_market(
+            self._http,
+            trade,
+        )
+
     async def _backfill_polymarket_once(self) -> None:
         if self._http is None:
             return
@@ -132,12 +143,9 @@ class SignalWorker:
                 if not ts or ts < cut_ts:
                     continue
 
+                if not await self._passes_whale_trade_filters(trade):
+                    continue
                 category = classify_polymarket_trade(trade)
-                if not self._meets_whale_threshold(trade, category):
-                    continue
-                price = self._trade_price(trade)
-                if not self._is_alertable_price(price, category):
-                    continue
                 considered_trades_total += 1
 
                 eligible = [
@@ -202,12 +210,9 @@ class SignalWorker:
             if ts and wall - ts > max_age:
                 continue
 
+            if not await self._passes_whale_trade_filters(trade):
+                continue
             category = classify_polymarket_trade(trade)
-            if not self._meets_whale_threshold(trade, category):
-                continue
-            price = self._trade_price(trade)
-            if not self._is_alertable_price(price, category):
-                continue
 
             eligible = [
                 u

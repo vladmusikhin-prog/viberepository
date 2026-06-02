@@ -5,6 +5,7 @@ from aiogram import Bot
 from src.config import Settings
 from src.services.admin_service import AdminService
 from src.services.interaction_log_service import InteractionLogService
+from src.services.market_status_service import MarketStatusService
 from src.services.resolution_service import ResolutionService
 from src.services.settings_service import SettingsService
 from src.services.signal_service import SignalService
@@ -28,6 +29,7 @@ class AppContext:
     settings_service: SettingsService
     admin_service: AdminService
     interaction_log_service: InteractionLogService
+    market_status_service: MarketStatusService
 
 
 def build_context(settings: Settings, bot: Bot) -> AppContext:
@@ -69,6 +71,9 @@ def build_context(settings: Settings, bot: Bot) -> AppContext:
         settings=settings,
         user_repo=user_repo,
     )
+    market_status_service = MarketStatusService(
+        gamma_api_base=settings.polymarket_gamma_api_base,
+    )
     return AppContext(
         user_service=user_service,
         signal_service=signal_service,
@@ -77,4 +82,5 @@ def build_context(settings: Settings, bot: Bot) -> AppContext:
         settings_service=settings_service,
         admin_service=admin_service,
         interaction_log_service=interaction_log_service,
+        market_status_service=market_status_service,
     )
