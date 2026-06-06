@@ -13,6 +13,7 @@ from src.config import Settings
 from src.handlers.common import AppContext
 from src.integrations.polymarket_client import fetch_large_cash_trades
 from src.services.category_mapper import classify_polymarket_trade
+from src.services.trader_stats_visibility import user_can_see_trader_stats
 
 logger = logging.getLogger(__name__)
 
@@ -231,11 +232,22 @@ class SignalWorker:
                     user=user,
                 )
 
-    async def _deliver_trade_alert(self, *, trade: dict, category: str, user) -> bool:
-        trader_stats = await self.context.trader_stats_service.get_stats_for_trade(
-            self._http,
-            trade,
+    async def _user_can_see_trader_stats(self, telegram_user_id: int) -> bool:
+        if not self.settings.trader_stats_enabled:
+            return False
+        return await user_can_see_trader_stats(
+            self.bot,
+            telegram_user_id,
+            self.settings.trader_stats_visible_to,
         )
+
+    async def _deliver_trade_alert(self, *, trade: dict, category: str, user) -> bool:
+        trader_stats = None
+        if await self._user_can_see_trader_stats(user.telegram_user_id):
+            trader_stats = await self.context.trader_stats_service.get_stats_for_trade(
+                self._http,
+                trade,
+            )
         signal_id, text, _invite_url, use_html = (
             self.context.signal_service.build_polymarket_trade_alert(
                 trade,

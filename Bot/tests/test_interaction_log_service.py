@@ -45,6 +45,7 @@ def _settings(
         polymarket_resolution_batch_size=25,
         polymarket_gamma_api_base="https://gamma-api.polymarket.com",
         trader_stats_enabled=True,
+        trader_stats_visible_to=frozenset(),
         trader_stats_positions_limit=100,
         trader_stats_cache_ttl_sec=3600,
         admin_user_ids=(),

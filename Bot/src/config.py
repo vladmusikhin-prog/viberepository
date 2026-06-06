@@ -5,9 +5,11 @@ import os
 import urllib.error
 import urllib.request
 from pathlib import Path
-from typing import Optional
+from typing import FrozenSet, Optional
 
 from dotenv import load_dotenv
+
+from src.services.trader_stats_visibility import parse_trader_stats_visible_to
 
 _BOT_ROOT = Path(__file__).resolve().parent.parent
 load_dotenv(_BOT_ROOT / ".env")
@@ -97,6 +99,7 @@ class Settings:
     polymarket_resolution_batch_size: int
     polymarket_gamma_api_base: str
     trader_stats_enabled: bool
+    trader_stats_visible_to: FrozenSet[str]
     trader_stats_positions_limit: int
     trader_stats_cache_ttl_sec: int
     admin_user_ids: tuple[int, ...]
@@ -165,6 +168,9 @@ def load_settings() -> Settings:
         trader_stats_enabled=(
             os.getenv("TRADER_STATS_ENABLED", "true").strip().lower()
             in ("1", "true", "yes", "y", "on")
+        ),
+        trader_stats_visible_to=parse_trader_stats_visible_to(
+            os.getenv("TRADER_STATS_VISIBLE_TO", "VladislavMusikhin")
         ),
         trader_stats_positions_limit=int(os.getenv("TRADER_STATS_POSITIONS_LIMIT", "100")),
         trader_stats_cache_ttl_sec=int(os.getenv("TRADER_STATS_CACHE_TTL_SEC", "3600")),
