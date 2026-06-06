@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import html
+
 START_TEXT = """🐋 Whale Signals Bot
 
 Лови уведомления о whale-size ставках по выбранным рынкам.
@@ -127,6 +129,20 @@ def format_activation_example_text_for_categories(
     )
 
 
+def format_trader_name_label(
+    display_name: str,
+    *,
+    profile_url: str | None = None,
+    html_mode: bool = False,
+) -> str:
+    if html_mode:
+        safe_name = html.escape(display_name)
+        if profile_url:
+            return f'<a href="{profile_url}">{safe_name}</a>'
+        return safe_name
+    return display_name
+
+
 def format_trader_stats_block(
     *,
     display_name: str,
@@ -136,6 +152,8 @@ def format_trader_stats_block(
     total_realized_pnl_usd: float,
     positions_sampled: int,
     positions_limit: int,
+    profile_url: str | None = None,
+    html_mode: bool = False,
 ) -> str:
     pnl_label = _format_pnl(total_realized_pnl_usd)
     sample_note = (
@@ -143,8 +161,13 @@ def format_trader_stats_block(
         if positions_sampled < positions_limit
         else f"последние {positions_limit} закрытых позиций"
     )
+    trader_label = format_trader_name_label(
+        display_name,
+        profile_url=profile_url,
+        html_mode=html_mode,
+    )
     return (
-        f"👤 Кит: {display_name}\n"
+        f"👤 Кит: {trader_label}\n"
         f"📊 WR: {win_rate_pct}% ({wins}/{wins + losses} успешных закрытых позиций)\n"
         f"💰 Realized P&L ({sample_note}): {pnl_label}"
     )
@@ -159,9 +182,16 @@ def format_alert_text(
     whale_threshold_usd: int,
     category: str,
     trader_stats_block: str | None = None,
+    html_mode: bool = False,
 ) -> str:
     trader_section = f"\n{trader_stats_block}\n" if trader_stats_block else ""
     price_label = _format_price_for_category(price, category)
+    if html_mode:
+        market = html.escape(market)
+        side = html.escape(side)
+        price_label = html.escape(price_label)
+        timestamp_utc = html.escape(timestamp_utc)
+        category = html.escape(category)
     return f"""🐋 Whale Alert: крупное размещение
 
 🎯 Рынок: {market}

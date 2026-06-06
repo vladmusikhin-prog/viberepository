@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from typing import Optional
 from uuid import uuid4
 
+from src.services.polymarket_links import build_polymarket_profile_url
 from src.services.texts import format_alert_text, format_trader_stats_block, share_text
 from src.services.trader_stats_service import TraderStats
 
@@ -40,10 +41,10 @@ class SignalService:
         product_category: str,
         inviter_telegram_user_id: int,
         trader_stats: Optional[TraderStats] = None,
-    ) -> tuple[str, str, str]:
+    ) -> tuple[str, str, str, bool]:
         """
         Build whale alert from Polymarket Data API trade row (CASH filter).
-        Returns (signal_id, text, share_url).
+        Returns (signal_id, text, share_url, use_html_parse_mode).
         """
         tx = str(trade.get("transactionHash") or "")
         signal_id = f"pm-{tx}" if tx else f"pm-unknown-{uuid4()}"
@@ -64,6 +65,9 @@ class SignalService:
         else:
             time_s = "--:--"
 
+        profile_url = build_polymarket_profile_url(str(trade.get("proxyWallet") or ""))
+        use_html = profile_url is not None and trader_stats is not None
+
         trader_stats_block = None
         if trader_stats is not None:
             trader_stats_block = format_trader_stats_block(
@@ -74,6 +78,8 @@ class SignalService:
                 total_realized_pnl_usd=trader_stats.total_realized_pnl_usd,
                 positions_sampled=trader_stats.positions_sampled,
                 positions_limit=self.trader_stats_positions_limit,
+                profile_url=profile_url,
+                html_mode=use_html,
             )
 
         text = format_alert_text(
@@ -85,8 +91,9 @@ class SignalService:
             whale_threshold_usd=self.whale_threshold_for_category(product_category),
             category=product_category,
             trader_stats_block=trader_stats_block,
+            html_mode=use_html,
         )
-        return signal_id, text, self.build_invite_link(inviter_telegram_user_id)
+        return signal_id, text, self.build_invite_link(inviter_telegram_user_id), use_html
 
     def build_invite_link(self, inviter_user_id: int) -> str:
         return f"https://t.me/{self.bot_username}?start=invite_{inviter_user_id}"

@@ -19,7 +19,7 @@ def test_mark_signal_delivered_is_idempotent() -> None:
 
 def test_build_alert_uses_crypto_whale_threshold() -> None:
     service = SignalService(UserRepository(), SignalRepository(), 100_000, 20_000, 75_000, "bot")
-    _signal_id, text, _url = service.build_polymarket_trade_alert(
+    _signal_id, text, _url, _use_html = service.build_polymarket_trade_alert(
         {
             "transactionHash": "0xabc",
             "title": "Will Bitcoin reach $150k?",
@@ -38,7 +38,7 @@ def test_build_alert_uses_crypto_whale_threshold() -> None:
 
 def test_build_alert_crypto_price_three_decimals() -> None:
     service = SignalService(UserRepository(), SignalRepository(), 100_000, 20_000, 75_000, "bot")
-    _signal_id, text, _url = service.build_polymarket_trade_alert(
+    _signal_id, text, _url, _use_html = service.build_polymarket_trade_alert(
         {
             "transactionHash": "0xabc2",
             "title": "Will Bitcoin be between $76k and $78k?",
@@ -57,7 +57,7 @@ def test_build_alert_crypto_price_three_decimals() -> None:
 
 def test_build_alert_uses_economics_whale_threshold() -> None:
     service = SignalService(UserRepository(), SignalRepository(), 100_000, 20_000, 75_000, "bot")
-    _signal_id, text, _url = service.build_polymarket_trade_alert(
+    _signal_id, text, _url, _use_html = service.build_polymarket_trade_alert(
         {
             "transactionHash": "0xdef",
             "title": "Will the Fed cut rates in June 2026?",

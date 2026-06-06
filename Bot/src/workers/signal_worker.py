@@ -7,6 +7,7 @@ from typing import Optional
 
 import aiohttp
 from aiogram import Bot
+from aiogram.enums import ParseMode
 
 from src.config import Settings
 from src.handlers.common import AppContext
@@ -235,11 +236,13 @@ class SignalWorker:
             self._http,
             trade,
         )
-        signal_id, text, _invite_url = self.context.signal_service.build_polymarket_trade_alert(
-            trade,
-            category,
-            user.telegram_user_id,
-            trader_stats=trader_stats,
+        signal_id, text, _invite_url, use_html = (
+            self.context.signal_service.build_polymarket_trade_alert(
+                trade,
+                category,
+                user.telegram_user_id,
+                trader_stats=trader_stats,
+            )
         )
         if self.context.signal_service.is_signal_delivered(signal_id, user.telegram_user_id):
             return False
@@ -252,6 +255,7 @@ class SignalWorker:
                 chat_id=user.telegram_user_id,
                 text=text,
                 reply_markup=signal_keyboard(),
+                parse_mode=ParseMode.HTML if use_html else None,
             )
             delivered = self.context.signal_service.mark_signal_delivered(
                 signal_id,

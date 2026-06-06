@@ -67,7 +67,8 @@ def test_build_alert_includes_trader_stats() -> None:
         total_realized_pnl_usd=250_000,
         positions_sampled=4,
     )
-    _signal_id, text, _url = service.build_polymarket_trade_alert(
+    wallet = "0x56687bf447db6ffa42ffe2204a05edaa20f55839"
+    _signal_id, text, _url, use_html = service.build_polymarket_trade_alert(
         {
             "transactionHash": "0x1",
             "title": "Test market",
@@ -76,11 +77,14 @@ def test_build_alert_includes_trader_stats() -> None:
             "size": 100000,
             "price": 0.5,
             "timestamp": 1_700_000_000,
+            "proxyWallet": wallet,
         },
         "Crypto",
         1,
         trader_stats=stats,
     )
+    assert use_html is True
     assert "WR: 75% (3/4" in text
+    assert f'<a href="https://polymarket.com/profile/{wallet}?tab=activity">' in text
     assert "VPenguin (Pastel-Push)" in text
     assert "+$250,000" in text
