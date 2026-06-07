@@ -138,7 +138,8 @@ def format_trader_name_label(
     if html_mode:
         safe_name = html.escape(display_name)
         if profile_url:
-            return f'<a href="{profile_url}">{safe_name}</a>'
+            safe_url = html.escape(profile_url, quote=True)
+            return f'<a href="{safe_url}">{safe_name}</a>'
         return safe_name
     return display_name
 

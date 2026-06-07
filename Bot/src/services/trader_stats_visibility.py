@@ -26,15 +26,12 @@ def is_trader_stats_recipient_by_id(
     return str(telegram_user_id) in visible_to
 
 
-async def user_can_see_trader_stats(
+async def resolve_trader_stats_visible_by_username(
     bot: Bot,
     telegram_user_id: int,
     visible_to: FrozenSet[str],
 ) -> bool:
-    if not visible_to:
-        return False
-    if is_trader_stats_recipient_by_id(telegram_user_id, visible_to):
-        return True
+    """Match allowlist entry by @username via Telegram get_chat."""
     try:
         chat = await bot.get_chat(telegram_user_id)
     except Exception:
@@ -46,3 +43,19 @@ async def user_can_see_trader_stats(
         return False
     username = (chat.username or "").strip().lower()
     return username in visible_to
+
+
+async def user_can_see_trader_stats(
+    bot: Bot,
+    telegram_user_id: int,
+    visible_to: FrozenSet[str],
+) -> bool:
+    if not visible_to:
+        return False
+    if is_trader_stats_recipient_by_id(telegram_user_id, visible_to):
+        return True
+    return await resolve_trader_stats_visible_by_username(
+        bot,
+        telegram_user_id,
+        visible_to,
+    )

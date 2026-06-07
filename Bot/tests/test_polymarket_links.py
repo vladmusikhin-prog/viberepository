@@ -22,7 +22,10 @@ def test_format_trader_name_label_html_link() -> None:
         profile_url=url,
         html_mode=True,
     )
-    assert label == f'<a href="{url}">VPenguin (Pastel-Push)</a>'
+    assert label == (
+        f'<a href="https://polymarket.com/profile/0xabc?tab=activity">'
+        "VPenguin (Pastel-Push)</a>"
+    )
 
 
 def test_format_trader_stats_block_escapes_html_in_name() -> None:

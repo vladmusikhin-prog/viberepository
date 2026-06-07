@@ -13,9 +13,14 @@ from src.config import Settings
 from src.handlers.common import AppContext
 from src.integrations.polymarket_client import fetch_large_cash_trades
 from src.services.category_mapper import classify_polymarket_trade
-from src.services.trader_stats_visibility import user_can_see_trader_stats
+from src.services.trader_stats_visibility import (
+    is_trader_stats_recipient_by_id,
+    resolve_trader_stats_visible_by_username,
+)
 
 logger = logging.getLogger(__name__)
+
+TRADER_STATS_FETCH_TIMEOUT_SEC = 8.0
 
 
 class SignalWorker:
@@ -32,6 +37,7 @@ class SignalWorker:
         self.context = context
         self.settings = settings
         self._http = http_session
+        self._trader_stats_visibility_cache: dict[int, bool] = {}
 
     async def run(self) -> None:
         if self.settings.polymarket_backfill_enabled:
@@ -235,19 +241,64 @@ class SignalWorker:
     async def _user_can_see_trader_stats(self, telegram_user_id: int) -> bool:
         if not self.settings.trader_stats_enabled:
             return False
-        return await user_can_see_trader_stats(
+        visible_to = self.settings.trader_stats_visible_to
+        if not visible_to:
+            return False
+
+        cached = self._trader_stats_visibility_cache.get(telegram_user_id)
+        if cached is not None:
+            return cached
+
+        if is_trader_stats_recipient_by_id(telegram_user_id, visible_to):
+            self._trader_stats_visibility_cache[telegram_user_id] = True
+            return True
+
+        allowed = await resolve_trader_stats_visible_by_username(
             self.bot,
             telegram_user_id,
-            self.settings.trader_stats_visible_to,
+            visible_to,
+        )
+        self._trader_stats_visibility_cache[telegram_user_id] = allowed
+        return allowed
+
+    async def _fetch_trader_stats_for_trade(self, trade: dict):
+        try:
+            return await asyncio.wait_for(
+                self.context.trader_stats_service.get_stats_for_trade(
+                    self._http,
+                    trade,
+                ),
+                timeout=TRADER_STATS_FETCH_TIMEOUT_SEC,
+            )
+        except Exception:  # noqa: BLE001
+            logger.warning(
+                "Trader stats fetch skipped (timeout or error) tx=%s",
+                str(trade.get("transactionHash") or "")[:18],
+                exc_info=True,
+            )
+            return None
+
+    async def _send_whale_alert_message(
+        self,
+        *,
+        user,
+        text: str,
+        use_html: bool,
+    ) -> None:
+        from src.services.keyboards import signal_keyboard
+
+        await self.bot.send_message(
+            chat_id=user.telegram_user_id,
+            text=text,
+            reply_markup=signal_keyboard(),
+            parse_mode=ParseMode.HTML if use_html else None,
         )
 
     async def _deliver_trade_alert(self, *, trade: dict, category: str, user) -> bool:
         trader_stats = None
         if await self._user_can_see_trader_stats(user.telegram_user_id):
-            trader_stats = await self.context.trader_stats_service.get_stats_for_trade(
-                self._http,
-                trade,
-            )
+            trader_stats = await self._fetch_trader_stats_for_trade(trade)
+
         signal_id, text, _invite_url, use_html = (
             self.context.signal_service.build_polymarket_trade_alert(
                 trade,
@@ -261,14 +312,35 @@ class SignalWorker:
 
         tx = str(trade.get("transactionHash") or "")
         try:
-            from src.services.keyboards import signal_keyboard
+            try:
+                await self._send_whale_alert_message(
+                    user=user,
+                    text=text,
+                    use_html=use_html,
+                )
+            except Exception:  # noqa: BLE001
+                if not use_html:
+                    raise
+                logger.warning(
+                    "HTML whale alert failed; retrying plain text user_id=%s tx=%s",
+                    user.telegram_user_id,
+                    tx[:18],
+                    exc_info=True,
+                )
+                _signal_id, plain_text, _url, _plain_html = (
+                    self.context.signal_service.build_polymarket_trade_alert(
+                        trade,
+                        category,
+                        user.telegram_user_id,
+                        trader_stats=None,
+                    )
+                )
+                await self._send_whale_alert_message(
+                    user=user,
+                    text=plain_text,
+                    use_html=False,
+                )
 
-            await self.bot.send_message(
-                chat_id=user.telegram_user_id,
-                text=text,
-                reply_markup=signal_keyboard(),
-                parse_mode=ParseMode.HTML if use_html else None,
-            )
             delivered = self.context.signal_service.mark_signal_delivered(
                 signal_id,
                 user.telegram_user_id,
