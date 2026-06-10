@@ -108,6 +108,13 @@ class Settings:
     analytics_enabled: bool
     analytics_chat_id: Optional[int]
     analytics_session_timeout_sec: int
+    pro_user_ids: tuple[int, ...]
+    bet_analytics_enabled: bool
+    market_baseline_trades_limit: int
+    market_baseline_min_samples: int
+    market_baseline_cache_ttl_sec: int
+    trader_stats_user_trades_limit: int
+    bet_analytics_flash_hours: float
 
     def whale_threshold_for_category(self, category: str) -> int:
         if category == "Crypto":
@@ -184,4 +191,11 @@ def load_settings() -> Settings:
         analytics_enabled=_parse_bool(os.getenv("ANALYTICS_ENABLED", "true"), default=True),
         analytics_chat_id=_parse_optional_chat_id(os.getenv("ANALYTICS_CHAT_ID", "")),
         analytics_session_timeout_sec=int(os.getenv("ANALYTICS_SESSION_TIMEOUT_SEC", "180")),
+        pro_user_ids=_parse_admin_user_ids(os.getenv("PRO_USER_IDS", "")),
+        bet_analytics_enabled=_parse_bool(os.getenv("BET_ANALYTICS_ENABLED", "true"), default=True),
+        market_baseline_trades_limit=int(os.getenv("MARKET_BASELINE_TRADES_LIMIT", "100")),
+        market_baseline_min_samples=int(os.getenv("MARKET_BASELINE_MIN_SAMPLES", "5")),
+        market_baseline_cache_ttl_sec=int(os.getenv("MARKET_BASELINE_CACHE_TTL_SEC", "600")),
+        trader_stats_user_trades_limit=int(os.getenv("TRADER_STATS_USER_TRADES_LIMIT", "100")),
+        bet_analytics_flash_hours=float(os.getenv("BET_ANALYTICS_FLASH_HOURS", "24")),
     )

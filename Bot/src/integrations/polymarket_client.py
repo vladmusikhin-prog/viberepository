@@ -80,3 +80,65 @@ async def fetch_closed_positions(
         logger.warning("Polymarket closed-positions: unexpected JSON shape %s", type(data))
         return []
     return data
+
+
+async def fetch_trades_for_market(
+    session: aiohttp.ClientSession,
+    *,
+    base_url: str,
+    condition_id: str,
+    limit: int = 100,
+) -> List[dict[str, Any]]:
+    """GET /trades filtered by market conditionId."""
+    cid = (condition_id or "").strip()
+    if not cid:
+        return []
+
+    url = f"{base_url.rstrip('/')}/trades"
+    params = {
+        "market": cid,
+        "limit": min(max(int(limit), 1), 500),
+    }
+    timeout = aiohttp.ClientTimeout(total=30)
+    try:
+        async with session.get(url, params=params, timeout=timeout) as resp:
+            resp.raise_for_status()
+            data = await resp.json()
+    except (aiohttp.ClientError, TimeoutError, OSError) as e:
+        logger.warning("Polymarket market trades request failed: %s", e)
+        return []
+
+    if not isinstance(data, list):
+        return []
+    return data
+
+
+async def fetch_trades_for_user(
+    session: aiohttp.ClientSession,
+    *,
+    base_url: str,
+    user_wallet: str,
+    limit: int = 100,
+) -> List[dict[str, Any]]:
+    """GET /trades for a wallet (entry price profile, frequency)."""
+    wallet = (user_wallet or "").strip()
+    if not wallet:
+        return []
+
+    url = f"{base_url.rstrip('/')}/trades"
+    params = {
+        "user": wallet,
+        "limit": min(max(int(limit), 1), 500),
+    }
+    timeout = aiohttp.ClientTimeout(total=30)
+    try:
+        async with session.get(url, params=params, timeout=timeout) as resp:
+            resp.raise_for_status()
+            data = await resp.json()
+    except (aiohttp.ClientError, TimeoutError, OSError) as e:
+        logger.warning("Polymarket user trades request failed: %s", e)
+        return []
+
+    if not isinstance(data, list):
+        return []
+    return data

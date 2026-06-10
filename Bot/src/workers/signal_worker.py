@@ -21,6 +21,7 @@ from src.services.trader_stats_visibility import (
 logger = logging.getLogger(__name__)
 
 TRADER_STATS_FETCH_TIMEOUT_SEC = 8.0
+BET_ANALYTICS_FETCH_TIMEOUT_SEC = 8.0
 
 
 class SignalWorker:
@@ -238,9 +239,8 @@ class SignalWorker:
                     user=user,
                 )
 
-    async def _user_can_see_trader_stats(self, telegram_user_id: int) -> bool:
-        if not self.settings.trader_stats_enabled:
-            return False
+    async def _user_can_see_trader_identity(self, telegram_user_id: int) -> bool:
+        """Allowlist controls whale name/profile link only, not WR/PnL block."""
         visible_to = self.settings.trader_stats_visible_to
         if not visible_to:
             return False
@@ -278,6 +278,27 @@ class SignalWorker:
             )
             return None
 
+    async def _fetch_bet_analytics_for_trade(self, trade: dict, user, trader_stats):
+        if not self.settings.bet_analytics_enabled:
+            return None
+        try:
+            return await asyncio.wait_for(
+                self.context.bet_analytics_service.build_for_trade(
+                    self._http,
+                    trade,
+                    telegram_user_id=user.telegram_user_id,
+                    trader_stats=trader_stats,
+                ),
+                timeout=BET_ANALYTICS_FETCH_TIMEOUT_SEC,
+            )
+        except Exception:  # noqa: BLE001
+            logger.warning(
+                "Bet analytics fetch skipped (timeout or error) tx=%s",
+                str(trade.get("transactionHash") or "")[:18],
+                exc_info=True,
+            )
+            return None
+
     async def _send_whale_alert_message(
         self,
         *,
@@ -296,8 +317,18 @@ class SignalWorker:
 
     async def _deliver_trade_alert(self, *, trade: dict, category: str, user) -> bool:
         trader_stats = None
-        if await self._user_can_see_trader_stats(user.telegram_user_id):
+        if self.settings.trader_stats_enabled:
             trader_stats = await self._fetch_trader_stats_for_trade(trade)
+
+        show_trader_identity = await self._user_can_see_trader_identity(
+            user.telegram_user_id,
+        )
+
+        bet_analytics = await self._fetch_bet_analytics_for_trade(
+            trade,
+            user,
+            trader_stats,
+        )
 
         signal_id, text, _invite_url, use_html = (
             self.context.signal_service.build_polymarket_trade_alert(
@@ -305,6 +336,8 @@ class SignalWorker:
                 category,
                 user.telegram_user_id,
                 trader_stats=trader_stats,
+                bet_analytics=bet_analytics,
+                show_trader_identity=show_trader_identity,
             )
         )
         if self.context.signal_service.is_signal_delivered(signal_id, user.telegram_user_id):
@@ -332,7 +365,9 @@ class SignalWorker:
                         trade,
                         category,
                         user.telegram_user_id,
-                        trader_stats=None,
+                        trader_stats=trader_stats,
+                        bet_analytics=bet_analytics,
+                        show_trader_identity=False,
                     )
                 )
                 await self._send_whale_alert_message(

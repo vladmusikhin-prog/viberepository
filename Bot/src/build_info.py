@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 
 # Bump when onboarding/delivery behavior changes materially (for support checks).
-FEATURE_TAG = "trader_stats_delivery_fix_v1"
+FEATURE_TAG = "bet_analytics_v1"
 
 
 def get_build_id() -> str:

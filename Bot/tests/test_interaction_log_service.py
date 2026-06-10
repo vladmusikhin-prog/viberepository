@@ -54,6 +54,13 @@ def _settings(
         analytics_enabled=analytics_enabled,
         analytics_chat_id=analytics_chat_id,
         analytics_session_timeout_sec=timeout_sec,
+        pro_user_ids=(),
+        bet_analytics_enabled=True,
+        market_baseline_trades_limit=100,
+        market_baseline_min_samples=5,
+        market_baseline_cache_ttl_sec=600,
+        trader_stats_user_trades_limit=100,
+        bet_analytics_flash_hours=24.0,
     )
 
 

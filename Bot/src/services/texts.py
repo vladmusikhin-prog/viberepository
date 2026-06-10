@@ -2,6 +2,9 @@ from __future__ import annotations
 
 import html
 
+from src.services.bet_analytics import format_anomaly_line, format_trade_context_line
+from src.services.bet_analytics_service import BetAnalyticsBundle
+
 START_TEXT = """🐋 Whale Signals Bot
 
 Лови уведомления о whale-size ставках по выбранным рынкам.
@@ -144,6 +147,14 @@ def format_trader_name_label(
     return display_name
 
 
+def format_bet_analytics_block(bundle: BetAnalyticsBundle) -> str:
+    lines = [f"⚡ Сила сигнала: {bundle.verdict.label_ru}"]
+    if bundle.anomaly is not None:
+        lines.append(format_anomaly_line(bundle.anomaly, brief=not bundle.is_pro))
+    lines.append(format_trade_context_line(bundle.trade_context, pro=bundle.is_pro))
+    return "\n".join(lines)
+
+
 def format_trader_stats_block(
     *,
     display_name: str,
@@ -155,6 +166,13 @@ def format_trader_stats_block(
     positions_limit: int,
     profile_url: str | None = None,
     html_mode: bool = False,
+    is_pro: bool = False,
+    period_days: int = 90,
+    skill_hint_text: str = "",
+    wins_usd: float = 0.0,
+    losses_usd: float = 0.0,
+    trades_per_month: float = 0.0,
+    show_trader_identity: bool = True,
 ) -> str:
     pnl_label = _format_pnl(total_realized_pnl_usd)
     sample_note = (
@@ -162,13 +180,37 @@ def format_trader_stats_block(
         if positions_sampled < positions_limit
         else f"последние {positions_limit} закрытых позиций"
     )
-    trader_label = format_trader_name_label(
-        display_name,
-        profile_url=profile_url,
-        html_mode=html_mode,
-    )
+    if show_trader_identity:
+        trader_label = format_trader_name_label(
+            display_name,
+            profile_url=profile_url,
+            html_mode=html_mode,
+        )
+        header = f"👤 Кит: {trader_label}"
+    else:
+        header = "👤 Кит: скрыт"
+    if is_pro:
+        freq_line = (
+            f" · ~{trades_per_month:.0f} сделок/мес"
+            if trades_per_month > 0
+            else ""
+        )
+        if wins_usd > 0 and losses_usd > 0:
+            pnl_split = f" (win {_format_pnl(wins_usd)} / loss -${losses_usd:,.0f})"
+        elif wins_usd > 0:
+            pnl_split = f" (win {_format_pnl(wins_usd)})"
+        else:
+            pnl_split = ""
+        skill_line = f"\n🧠 {skill_hint_text}" if skill_hint_text else ""
+        return (
+            f"{header}\n"
+            f"📊 {positions_sampled} закрытых / {period_days}д · WR {win_rate_pct}%"
+            f"{freq_line}\n"
+            f"💰 Realized P&L ({sample_note}): {pnl_label}{pnl_split}"
+            f"{skill_line}"
+        )
     return (
-        f"👤 Кит: {trader_label}\n"
+        f"{header}\n"
         f"📊 WR: {win_rate_pct}% ({wins}/{wins + losses} успешных закрытых позиций)\n"
         f"💰 Realized P&L ({sample_note}): {pnl_label}"
     )
@@ -183,10 +225,19 @@ def format_alert_text(
     whale_threshold_usd: int,
     category: str,
     trader_stats_block: str | None = None,
+    analytics_block: str | None = None,
+    trade_context=None,
     html_mode: bool = False,
 ) -> str:
     trader_section = f"\n{trader_stats_block}\n" if trader_stats_block else ""
-    price_label = _format_price_for_category(price, category)
+    analytics_section = f"\n{analytics_block}\n" if analytics_block else ""
+    if trade_context is not None:
+        price_label = (
+            f"~{trade_context.implied_pct}% "
+            f"(коэф. ~{trade_context.coefficient_multiplier}×)"
+        )
+    else:
+        price_label = _format_price_for_category(price, category)
     if html_mode:
         market = html.escape(market)
         side = html.escape(side)
@@ -201,7 +252,7 @@ def format_alert_text(
 💵 Размер: ${size_usd:,.0f}
 💲 Цена: {price_label}
 🕒 Время: {timestamp_utc} UTC
-{trader_section}
+{analytics_section}{trader_section}
 📏 Критерий whale: >= ${whale_threshold_usd / 1000:.0f}k
 🏷 Категория: {category}"""
 

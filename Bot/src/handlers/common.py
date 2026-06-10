@@ -4,11 +4,14 @@ from aiogram import Bot
 
 from src.config import Settings
 from src.services.admin_service import AdminService
+from src.services.bet_analytics_service import BetAnalyticsService
 from src.services.interaction_log_service import InteractionLogService
+from src.services.market_baseline_service import MarketBaselineService
 from src.services.market_status_service import MarketStatusService
 from src.services.resolution_service import ResolutionService
 from src.services.settings_service import SettingsService
 from src.services.signal_service import SignalService
+from src.services.tier_service import TierService
 from src.services.trader_stats_service import TraderStatsService
 from src.services.user_service import UserService
 from src.repositories.in_memory import SignalRepository as InMemorySignalRepository
@@ -25,6 +28,7 @@ class AppContext:
     user_service: UserService
     signal_service: SignalService
     trader_stats_service: TraderStatsService
+    bet_analytics_service: BetAnalyticsService
     resolution_service: ResolutionService
     settings_service: SettingsService
     admin_service: AdminService
@@ -55,8 +59,22 @@ def build_context(settings: Settings, bot: Bot) -> AppContext:
     trader_stats_service = TraderStatsService(
         enabled=settings.trader_stats_enabled,
         positions_limit=settings.trader_stats_positions_limit,
+        user_trades_limit=settings.trader_stats_user_trades_limit,
         cache_ttl_sec=settings.trader_stats_cache_ttl_sec,
         data_api_base=settings.polymarket_data_api_base,
+    )
+    tier_service = TierService(settings.pro_user_ids)
+    market_baseline_service = MarketBaselineService(
+        data_api_base=settings.polymarket_data_api_base,
+        trades_limit=settings.market_baseline_trades_limit,
+        min_samples=settings.market_baseline_min_samples,
+        cache_ttl_sec=settings.market_baseline_cache_ttl_sec,
+    )
+    bet_analytics_service = BetAnalyticsService(
+        market_baseline_service=market_baseline_service,
+        tier_service=tier_service,
+        gamma_api_base=settings.polymarket_gamma_api_base,
+        flash_hours_threshold=settings.bet_analytics_flash_hours,
     )
     resolution_service = ResolutionService(pending_resolution_repo)
     settings_service = SettingsService(user_repo)
@@ -78,6 +96,7 @@ def build_context(settings: Settings, bot: Bot) -> AppContext:
         user_service=user_service,
         signal_service=signal_service,
         trader_stats_service=trader_stats_service,
+        bet_analytics_service=bet_analytics_service,
         resolution_service=resolution_service,
         settings_service=settings_service,
         admin_service=admin_service,

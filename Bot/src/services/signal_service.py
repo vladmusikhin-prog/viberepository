@@ -4,8 +4,14 @@ from datetime import datetime, timezone
 from typing import Optional
 from uuid import uuid4
 
+from src.services.bet_analytics_service import BetAnalyticsBundle
 from src.services.polymarket_links import build_polymarket_profile_url
-from src.services.texts import format_alert_text, format_trader_stats_block, share_text
+from src.services.texts import (
+    format_alert_text,
+    format_bet_analytics_block,
+    format_trader_stats_block,
+    share_text,
+)
 from src.services.trader_stats_service import TraderStats
 
 
@@ -41,6 +47,8 @@ class SignalService:
         product_category: str,
         inviter_telegram_user_id: int,
         trader_stats: Optional[TraderStats] = None,
+        bet_analytics: Optional[BetAnalyticsBundle] = None,
+        show_trader_identity: bool = True,
     ) -> tuple[str, str, str, bool]:
         """
         Build whale alert from Polymarket Data API trade row (CASH filter).
@@ -66,10 +74,15 @@ class SignalService:
             time_s = "--:--"
 
         profile_url = build_polymarket_profile_url(str(trade.get("proxyWallet") or ""))
-        use_html = profile_url is not None and trader_stats is not None
+        use_html = (
+            show_trader_identity
+            and profile_url is not None
+            and trader_stats is not None
+        )
 
         trader_stats_block = None
         if trader_stats is not None:
+            is_pro = bet_analytics.is_pro if bet_analytics is not None else False
             trader_stats_block = format_trader_stats_block(
                 display_name=trader_stats.display_name,
                 wins=trader_stats.wins,
@@ -78,9 +91,20 @@ class SignalService:
                 total_realized_pnl_usd=trader_stats.total_realized_pnl_usd,
                 positions_sampled=trader_stats.positions_sampled,
                 positions_limit=self.trader_stats_positions_limit,
-                profile_url=profile_url,
+                profile_url=profile_url if show_trader_identity else None,
                 html_mode=use_html,
+                is_pro=is_pro,
+                period_days=trader_stats.period_days,
+                skill_hint_text=trader_stats.skill_hint_text,
+                wins_usd=trader_stats.wins_usd,
+                losses_usd=trader_stats.losses_usd,
+                trades_per_month=trader_stats.trades_per_month,
+                show_trader_identity=show_trader_identity,
             )
+
+        analytics_block = None
+        if bet_analytics is not None:
+            analytics_block = format_bet_analytics_block(bet_analytics)
 
         text = format_alert_text(
             market=title,
@@ -91,6 +115,8 @@ class SignalService:
             whale_threshold_usd=self.whale_threshold_for_category(product_category),
             category=product_category,
             trader_stats_block=trader_stats_block,
+            analytics_block=analytics_block,
+            trade_context=bet_analytics.trade_context if bet_analytics else None,
             html_mode=use_html,
         )
         return signal_id, text, self.build_invite_link(inviter_telegram_user_id), use_html
