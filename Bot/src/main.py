@@ -129,6 +129,11 @@ async def main() -> None:
         FEATURE_TAG,
         settings.signal_source,
     )
+    if not settings.admin_user_ids:
+        logger.warning(
+            "ADMIN_USER_IDS is empty: /admin_stats is open to any user. "
+            "Set ADMIN_USER_IDS on Railway for production.",
+        )
     await _run_bot()
 
 

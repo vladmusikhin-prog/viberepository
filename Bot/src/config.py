@@ -131,6 +131,15 @@ class Settings:
         )
 
 
+def _normalize_persistence_mode(raw: str) -> str:
+    mode = (raw or "sqlite").strip().lower()
+    if mode in ("memory", "sqlite"):
+        return mode
+    raise ValueError(
+        f"PERSISTENCE_MODE must be 'memory' or 'sqlite', got {raw!r}",
+    )
+
+
 def load_settings() -> Settings:
     token = os.getenv("BOT_TOKEN", "").strip()
     if not token:
@@ -182,7 +191,7 @@ def load_settings() -> Settings:
         trader_stats_positions_limit=int(os.getenv("TRADER_STATS_POSITIONS_LIMIT", "100")),
         trader_stats_cache_ttl_sec=int(os.getenv("TRADER_STATS_CACHE_TTL_SEC", "3600")),
         admin_user_ids=_parse_admin_user_ids(os.getenv("ADMIN_USER_IDS", "")),
-        persistence_mode=os.getenv("PERSISTENCE_MODE", "sqlite").strip().lower(),
+        persistence_mode=_normalize_persistence_mode(os.getenv("PERSISTENCE_MODE", "sqlite")),
         sqlite_db_path=os.getenv(
             "SQLITE_DB_PATH",
             # relative to Bot/ directory by default

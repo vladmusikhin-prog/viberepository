@@ -166,11 +166,13 @@ class SignalWorker:
                 if not eligible:
                     continue
 
+                trader_stats = await self._trader_stats_for_trade(trade)
                 for user in eligible:
                     sent = await self._deliver_trade_alert(
                         trade=trade,
                         category=category,
                         user=user,
+                        trader_stats=trader_stats,
                     )
                     if sent:
                         signals_sent_total += 1
@@ -232,11 +234,13 @@ class SignalWorker:
             if not eligible:
                 continue
 
+            trader_stats = await self._trader_stats_for_trade(trade)
             for user in eligible:
                 await self._deliver_trade_alert(
                     trade=trade,
                     category=category,
                     user=user,
+                    trader_stats=trader_stats,
                 )
 
     async def _user_can_see_trader_identity(self, telegram_user_id: int) -> bool:
@@ -260,6 +264,11 @@ class SignalWorker:
         )
         self._trader_stats_visibility_cache[telegram_user_id] = allowed
         return allowed
+
+    async def _trader_stats_for_trade(self, trade: dict):
+        if not self.settings.trader_stats_enabled:
+            return None
+        return await self._fetch_trader_stats_for_trade(trade)
 
     async def _fetch_trader_stats_for_trade(self, trade: dict):
         try:
@@ -315,11 +324,14 @@ class SignalWorker:
             parse_mode=ParseMode.HTML if use_html else None,
         )
 
-    async def _deliver_trade_alert(self, *, trade: dict, category: str, user) -> bool:
-        trader_stats = None
-        if self.settings.trader_stats_enabled:
-            trader_stats = await self._fetch_trader_stats_for_trade(trade)
-
+    async def _deliver_trade_alert(
+        self,
+        *,
+        trade: dict,
+        category: str,
+        user,
+        trader_stats=None,
+    ) -> bool:
         show_trader_identity = await self._user_can_see_trader_identity(
             user.telegram_user_id,
         )
